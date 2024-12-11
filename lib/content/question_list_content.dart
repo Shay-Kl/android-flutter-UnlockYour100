@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
-import 'question_editor_screen.dart';
 
-class QuestionListScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'question_editor_content.dart';
+
+class QuestionListContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,7 +24,7 @@ class QuestionListScreen extends StatelessWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => QuestionEditorScreen()),
+            MaterialPageRoute(builder: (context) => QuestionEditorContent()),
           );
         },
       ),

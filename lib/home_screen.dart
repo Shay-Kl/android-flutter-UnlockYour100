@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'set_list_content.dart';
-import 'stats_content.dart';
-import 'other_content.dart';
+import 'content/question_set_list_content.dart';
+import 'content/stats_content.dart';
+import 'content/other_content.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -74,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _getPage(int index) {
     switch (index) {
       case 0:
-        return SetListContent();
+        return QuestionSetListContent();
       case 1:
         return StatsContent();
       case 2:

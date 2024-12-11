@@ -1,13 +1,13 @@
 
 import 'package:flutter/material.dart';
-import 'question_list_screen.dart';
+import 'question_list_content.dart';
 
-class SetListContent extends StatelessWidget {
+class QuestionSetListContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Set List Screen'),
+        title: Text('Question Set List Screen'),
         actions: [
           IconButton(
             icon: Icon(Icons.settings),
@@ -23,7 +23,7 @@ class SetListContent extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => QuestionListScreen()),
+              MaterialPageRoute(builder: (context) => QuestionListContent()),
             );
           },
         ),

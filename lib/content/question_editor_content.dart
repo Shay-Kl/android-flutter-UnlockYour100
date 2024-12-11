@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-class QuestionEditorScreen extends StatelessWidget {
+class QuestionEditorContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
