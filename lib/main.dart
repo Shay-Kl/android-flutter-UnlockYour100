@@ -10,9 +10,9 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: LoginScreen(), // Set LoginScreen as the home
-      debugShowCheckedModeBanner: false, // Hide the debug banner
+    return const MaterialApp(
+      home: LoginScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }

@@ -4,8 +4,10 @@ import 'content/stats_content.dart';
 import 'content/other_content.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -35,8 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
         height: 80,
-        animationDuration: Duration(milliseconds: 300),
-        destinations: [
+        animationDuration: const Duration(milliseconds: 300),
+        destinations: const [
           NavigationDestination(
             icon: Icon(Icons.list_outlined),
             selectedIcon: Icon(Icons.list),
@@ -74,11 +76,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _getPage(int index) {
     switch (index) {
       case 0:
-        return QuestionSetListContent();
+        return const QuestionSetListContent();
       case 1:
-        return StatsContent();
+        return const StatsContent();
       case 2:
-        return OtherContent();
+        return const OtherContent();
       default:
         return Container();
     }

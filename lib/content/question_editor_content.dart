@@ -1,32 +1,33 @@
-
 import 'package:flutter/material.dart';
 
 class QuestionEditorContent extends StatelessWidget {
+  const QuestionEditorContent({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Question Editor'),
+        title: const Text('Question Editor'),
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
+            const TextField(
               decoration: InputDecoration(
                 labelText: 'Question Title',
               ),
             ),
-            TextField(
+            const TextField(
               decoration: InputDecoration(
                 labelText: 'Question Description',
               ),
               maxLines: null,
             ),
             // ...add more fields as needed...
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
-              child: Text('Save'),
+              child: const Text('Save'),
               onPressed: () {
                 // Handle save action
               },

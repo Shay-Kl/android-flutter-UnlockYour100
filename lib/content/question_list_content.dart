@@ -1,26 +1,26 @@
-
 import 'package:flutter/material.dart';
 import 'question_editor_content.dart';
 
 class QuestionListContent extends StatelessWidget {
+  const QuestionListContent({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Question List'),
+        title: const Text('Question List'),
       ),
       body: ListView(
-        children: [
+        children: const [
           Card(
             child: ListTile(
               title: Text('Question 1'),
             ),
           ),
-          // ...add more cards as needed...
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         onPressed: () {
           Navigator.push(
             context,

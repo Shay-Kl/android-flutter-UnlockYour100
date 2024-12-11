@@ -1,13 +1,14 @@
-
 import 'package:flutter/material.dart';
 import 'question_list_content.dart';
 
 class QuestionSetListContent extends StatelessWidget {
+  const QuestionSetListContent({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Question Set List Screen'),
+        title: const Text('Question Set List Screen'),
         actions: [
           IconButton(
             icon: Icon(Icons.settings),
@@ -19,11 +20,11 @@ class QuestionSetListContent extends StatelessWidget {
       ),
       body: Center(
         child: ElevatedButton(
-          child: Text('Edit Set'),
+          child: const Text('Edit Set'),
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => QuestionListContent()),
+              MaterialPageRoute(builder: (context) => const QuestionListContent()),
             );
           },
         ),
