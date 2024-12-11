@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'set_list_content.dart';
 import 'stats_content.dart';
@@ -28,27 +27,32 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildOffstageNavigator(2),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Sets',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: 'Stats',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.more_horiz),
-            label: 'Other',
-          ),
-        ],
-        onTap: (index) {
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
+        height: 80,
+        animationDuration: Duration(milliseconds: 300),
+        destinations: [
+          NavigationDestination(
+            icon: Icon(Icons.list_outlined),
+            selectedIcon: Icon(Icons.list),
+            label: 'Sets',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.bar_chart_outlined),
+            selectedIcon: Icon(Icons.bar_chart),
+            label: 'Stats',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.more_horiz_outlined),
+            selectedIcon: Icon(Icons.more_horiz),
+            label: 'Other',
+          ),
+        ],
       ),
     );
   }
