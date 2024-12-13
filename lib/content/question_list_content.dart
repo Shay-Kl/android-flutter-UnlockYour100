@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'question_editor_content.dart';
+import 'question.dart';
+
+const ph1 = Question('What is the capital of Israel?', 'Jerusalem',
+    ['Yotvata', 'Haifa', 'Berlin']);
+const ph2 = Question('Where did the fellowship of the ring head?', 'Mordor',
+    ['Valinor', 'Rhun', 'Numenor']);
 
 class QuestionListContent extends StatefulWidget {
   const QuestionListContent({super.key});
@@ -9,43 +15,16 @@ class QuestionListContent extends StatefulWidget {
 }
 
 class _QuestionListContentState extends State<QuestionListContent> {
-  List<Map<String, dynamic>> questions = [
-    {
-      'question': 'What is the capital of Israel?',
-      'answers': ['Yotvata', 'Jerusalem', 'Haifa', 'Berlin']
-    }
-  ];
-
+  var questions = [ph1, ph2, ph1, ph2, ph1, ph2, ph1, ph2, ph1, ph2];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Set 1'),
+        title: const Text('Geography 101'),
       ),
       body: ListView(
-        children: questions.map((question) {
-          return Card(
-            child: ListTile(
-              title: Text(question['question']),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: question['answers'].asMap().entries.map<Widget>((entry) {
-                  final index = entry.key;
-                  final answer = entry.value;
-                  return Container(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    decoration: BoxDecoration(
-                      color: index == 0 
-                          ? Colors.green.shade50 
-                          : Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text('- $answer'),
-                  );
-                }).toList(),
-              ),
-            ),
-          );
+        children: questions.map((q) {
+          return QuestionCard(q);
         }).toList(),
       ),
       floatingActionButton: FloatingActionButton(
@@ -53,7 +32,8 @@ class _QuestionListContentState extends State<QuestionListContent> {
         onPressed: () async {
           final newQuestion = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const QuestionEditorContent()),
+            MaterialPageRoute(
+                builder: (context) => const QuestionEditorContent()),
           );
           if (newQuestion != null) {
             setState(() {
@@ -61,6 +41,37 @@ class _QuestionListContentState extends State<QuestionListContent> {
             });
           }
         },
+      ),
+    );
+  }
+}
+
+class QuestionCard extends StatelessWidget {
+  final Question q;
+  const QuestionCard(this.q, {super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4.0,
+      margin: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
+      child: ListTile(
+        titleTextStyle: const TextStyle(
+          color: Colors.black,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+        title: Text(q.question),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: q.answers.asMap().entries.map<Widget>((entry) {
+            final answer = entry.value;
+            return Container(
+              color: entry.key == 0 ? Colors.green.shade50 : Colors.red.shade50,
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text('- $answer'),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

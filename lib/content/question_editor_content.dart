@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project/content/question.dart';
 
 class QuestionEditorContent extends StatefulWidget {
   const QuestionEditorContent({super.key});
@@ -168,13 +169,15 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
                 onPressed: _allFieldsFilled
                     ? () {
                         if (_formKey.currentState!.validate()) {
-                          final newQuestion = {
-                            'question': _questionController.text,
-                            'answers': _answerControllers
-                                .sublist(0, _selectedWrongAnswerCount + 1)
+                          final newQuestion = Question(
+                            _questionController.text,
+                            _answerControllers[0].text,
+                            _answerControllers
+                                .sublist(1, _selectedWrongAnswerCount + 1)
                                 .map((c) => c.text)
                                 .toList(),
-                          };
+                          );
+                          
                           Navigator.pop(context, newQuestion);
                         }
                       }
