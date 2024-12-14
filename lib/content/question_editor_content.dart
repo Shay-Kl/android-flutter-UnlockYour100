@@ -13,12 +13,12 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   final _questionFocus = FocusNode();
   bool loading = false;
   int _selectedAnswerCount = 4;
-  final List<int> _answerCounts = [2, 3, 4, 5];
+  final List<int> _answerCounts = [2, 3, 4, 5, 6];
 
   final TextEditingController _questionController = TextEditingController();
   final TextEditingController _rightAnswerController = TextEditingController();
   final List<TextEditingController> _wrongAnswerControllers =
-      List.generate(4, (_) => TextEditingController());
+      List.generate(5, (_) => TextEditingController());
 
   bool questionFilled = false;
   bool answersFilled = false;
@@ -171,7 +171,7 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
     });
     final answers = await GPTService.generateResponse(_questionController.text);
     _rightAnswerController.text = answers['correct_answer'] ?? '';
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 5; i++) {
       _wrongAnswerControllers[i].text = answers['wrong_answers']?[i] ?? '';
     }
     setState(() {
