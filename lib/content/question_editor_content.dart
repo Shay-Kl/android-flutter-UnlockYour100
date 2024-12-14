@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project/content/question.dart';
+import '../gpt_service.dart';
 
 class QuestionEditorContent extends StatefulWidget {
   const QuestionEditorContent({super.key});
@@ -9,8 +10,9 @@ class QuestionEditorContent extends StatefulWidget {
 }
 
 class _QuestionEditorContentState extends State<QuestionEditorContent> {
-  int _selectedWrongAnswerCount = 1;
-  final List<int> _wrongAnswerCounts = [1, 2, 3, 4];
+  bool loading = false;
+  int _selectedAnswerCount = 2;
+  final List<int> _answerCounts = [2, 3, 4, 5];
 
   final TextEditingController _questionController = TextEditingController();
   final TextEditingController _rightAnswerController = TextEditingController();
@@ -33,7 +35,7 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   void _updateButtonStates() {
     setState(() {
       questionFilled = _questionController.text.isNotEmpty;
-      for (int i = 0; i < _selectedWrongAnswerCount; i++) {
+      for (int i = 0; i < _selectedAnswerCount-1; i++) {
         if (_wrongAnswerControllers[i].text.isEmpty) {
           answersFilled = false;
           return;
@@ -68,7 +70,24 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
           border: OutlineInputBorder(),
         ),
       ),
-      const SizedBox(height: 10),
+      const SizedBox(height: 20),
+      SegmentedButton<int>(
+        segments: _answerCounts.map((count) {
+          return ButtonSegment<int>(
+            value: count,
+            label: Text(count.toString()),
+          );
+        }).toList(),
+        selected: {_selectedAnswerCount},
+        onSelectionChanged: (newSelection) {
+          setState(() {
+            _selectedAnswerCount = newSelection.first;
+          });
+          _updateButtonStates();
+        },
+        showSelectedIcon: true,
+      ),
+      const SizedBox(height: 20),
       TextField(
         controller: _rightAnswerController,
         decoration: const InputDecoration(
@@ -76,25 +95,8 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
           border: OutlineInputBorder(),
         ),
       ),
-      const SizedBox(height: 30),
-      SegmentedButton<int>(
-        segments: _wrongAnswerCounts.map((count) {
-          return ButtonSegment<int>(
-            value: count,
-            label: Text(count.toString()),
-          );
-        }).toList(),
-        selected: {_selectedWrongAnswerCount},
-        onSelectionChanged: (newSelection) {
-          setState(() {
-            _selectedWrongAnswerCount = newSelection.first;
-          });
-          _updateButtonStates();
-        },
-        showSelectedIcon: true,
-      ),
       const SizedBox(height: 10),
-      ...List.generate(_selectedWrongAnswerCount, (index) {
+      ...List.generate(_selectedAnswerCount-1, (index) {
         return Padding(
             padding: const EdgeInsets.only(bottom: 15),
             child: TextField(
@@ -105,44 +107,36 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
               ),
             ));
       }),
+      loading ? const CircularProgressIndicator() : OutlinedButton(
+        onPressed:
+            (questionFilled && !answersFilled) ? _handleGeneratePress : null,
+        child: const Text('Generate Answers'),
+      ),
     ];
   }
 
   Widget _buildActionButtons() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 55),
-      child: Row(
-        children: [
-          Expanded(
-            child: FilledButton.tonal(
-              onPressed: (questionFilled && !answersFilled)
-                  ? _handleGeneratePress
-                  : null,
-              child: const Text('Generate'),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: FilledButton(
-              onPressed:
-                  (questionFilled && answersFilled) ? _handleSavePress : null,
-              child: const Text('Save'),
-            ),
-          ),
-        ],
+      padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
+      child: FilledButton(
+        onPressed: (questionFilled && answersFilled) ? _handleSavePress : null,
+        child: const Text('Save'),
       ),
     );
   }
 
-  void _handleGeneratePress() {
-    if (_rightAnswerController.text.isEmpty) {
-      _rightAnswerController.text = 'ph';
+  void _handleGeneratePress() async {
+    setState(() {
+      loading = true;
+    });
+    final answers = await GPTService.generateResponse(_questionController.text);
+    _rightAnswerController.text = answers['correct_answer'] ?? '';
+    for (int i = 0; i < 4; i++) {
+      _wrongAnswerControllers[i].text = answers['wrong_answers']?[i] ?? '';
     }
-    for (var controller in _wrongAnswerControllers) {
-      if (controller.text.isEmpty) {
-        controller.text = 'ph';
-      }
-    }
+    setState(() {
+      loading = false;
+    });
   }
 
   void _handleSavePress() {
@@ -150,7 +144,7 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
       _questionController.text,
       _rightAnswerController.text,
       _wrongAnswerControllers
-          .sublist(0, _selectedWrongAnswerCount)
+          .sublist(0, _selectedAnswerCount-1)
           .map((c) => c.text)
           .toList(),
     );
