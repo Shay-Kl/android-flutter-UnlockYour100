@@ -10,8 +10,9 @@ class QuestionEditorContent extends StatefulWidget {
 }
 
 class _QuestionEditorContentState extends State<QuestionEditorContent> {
+  final _questionFocus = FocusNode();
   bool loading = false;
-  int _selectedAnswerCount = 2;
+  int _selectedAnswerCount = 4;
   final List<int> _answerCounts = [2, 3, 4, 5];
 
   final TextEditingController _questionController = TextEditingController();
@@ -25,11 +26,18 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   @override
   void initState() {
     super.initState();
+    _questionFocus.requestFocus();
     _questionController.addListener(_updateButtonStates);
     _rightAnswerController.addListener(_updateButtonStates);
     for (var controller in _wrongAnswerControllers) {
       controller.addListener(_updateButtonStates);
     }
+  }
+
+  @override
+  void dispose() {
+    _questionFocus.dispose();
+    super.dispose();
   }
 
   void _updateButtonStates() {
@@ -49,7 +57,7 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Question Editor'),
+        title: const Text('New Question'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -64,13 +72,27 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   List<Widget> _buildFormFields() {
     return [
       TextField(
+        focusNode: _questionFocus,
         controller: _questionController,
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
+          suffixIcon: IconButton(
+              onPressed: () {
+                _questionController.clear();
+                _updateButtonStates();
+              },
+              icon: const Icon(Icons.clear)),
           labelText: 'Question',
-          border: OutlineInputBorder(),
+          border: const OutlineInputBorder(),
         ),
       ),
-      const SizedBox(height: 20),
+      const Divider(height: 50),
+      Text(
+        'Number of Answers:   ',
+        style: TextStyle(
+          color: questionFilled ? null : Colors.grey,
+        ),
+      ),
+      const SizedBox(height: 10),
       SegmentedButton<int>(
         segments: _answerCounts.map((count) {
           return ButtonSegment<int>(
@@ -79,20 +101,29 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
           );
         }).toList(),
         selected: {_selectedAnswerCount},
-        onSelectionChanged: (newSelection) {
-          setState(() {
-            _selectedAnswerCount = newSelection.first;
-          });
-          _updateButtonStates();
-        },
+        onSelectionChanged: questionFilled
+            ? (newSelection) {
+                setState(() {
+                  _selectedAnswerCount = newSelection.first;
+                });
+                _updateButtonStates();
+              }
+            : null,
         showSelectedIcon: true,
       ),
       const SizedBox(height: 20),
       TextField(
+        enabled: questionFilled,
         controller: _rightAnswerController,
-        decoration: const InputDecoration(
-          labelText: 'Answer',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          suffixIcon: IconButton(
+              onPressed: () {
+                _rightAnswerController.clear();
+                _updateButtonStates();
+              },
+              icon: const Icon(Icons.clear)),
+          labelText: 'Correct Answer',
+          border: const OutlineInputBorder(),
         ),
       ),
       const SizedBox(height: 10),
@@ -100,18 +131,26 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
         return Padding(
             padding: const EdgeInsets.only(bottom: 15),
             child: TextField(
+              enabled: questionFilled,
               controller: _wrongAnswerControllers[index],
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                suffixIcon: IconButton(
+                    onPressed: () {
+                      _wrongAnswerControllers[index].clear();
+                      _updateButtonStates();
+                    },
+                    icon: const Icon(Icons.clear)),
+                border: const OutlineInputBorder(),
                 labelText: 'Wrong Answer',
               ),
             ));
       }),
       loading
           ? const CircularProgressIndicator()
-          : OutlinedButton(
+          : OutlinedButton.icon(
               onPressed: questionFilled ? _handleGeneratePress : null,
-              child: const Text('Generate Answers'),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Generate Answers'),
             ),
     ];
   }
