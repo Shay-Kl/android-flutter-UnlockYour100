@@ -65,13 +65,13 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
         title: const Text('New Question'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           children: _buildFormFields(),
         ),
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         child: FilledButton(
           onPressed:
               (questionFilled && answersFilled) ? _handleSavePress : null,
@@ -98,31 +98,35 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
         ),
       ),
       const Divider(height: 50),
-      Text(
-        'Number of Answers:   ',
-        style: TextStyle(
-          color: questionFilled ? null : Colors.grey,
-        ),
-      ),
       const SizedBox(height: 10),
-      SegmentedButton<int>(
-        segments: answerCounts.map((count) {
-          return ButtonSegment<int>(
-            value: count,
-            label: Text(count.toString()),
-          );
-        }).toList(),
-        selected: {_selectedAnswerCount},
-        onSelectionChanged: questionFilled
-            ? (newSelection) {
-                setState(() {
-                  _selectedAnswerCount = newSelection.first;
-                });
-                _updateButtonStates();
-              }
-            : null,
-        showSelectedIcon: true,
-      ),
+      Row(children: [
+        Expanded(child:Text(
+          'Answers',
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: questionFilled ? null : Colors.grey,
+          ),
+        ),),
+        SegmentedButton<int>(
+          segments: answerCounts.map((count) {
+            return ButtonSegment<int>(
+              value: count,
+              label: Text(count.toString()),
+            );
+          }).toList(),
+          selected: {_selectedAnswerCount},
+          onSelectionChanged: questionFilled
+              ? (newSelection) {
+                  setState(() {
+                    _selectedAnswerCount = newSelection.first;
+                  });
+                  _updateButtonStates();
+                }
+              : null,
+          showSelectedIcon: true,
+        ),
+      ]),
+      const Divider(height: 50),
       ...List.generate(_selectedAnswerCount, (index) {
         return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
