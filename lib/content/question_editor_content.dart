@@ -35,7 +35,7 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   void _updateButtonStates() {
     setState(() {
       questionFilled = _questionController.text.isNotEmpty;
-      for (int i = 0; i < _selectedAnswerCount-1; i++) {
+      for (int i = 0; i < _selectedAnswerCount - 1; i++) {
         if (_wrongAnswerControllers[i].text.isEmpty) {
           answersFilled = false;
           return;
@@ -96,7 +96,7 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
         ),
       ),
       const SizedBox(height: 10),
-      ...List.generate(_selectedAnswerCount-1, (index) {
+      ...List.generate(_selectedAnswerCount - 1, (index) {
         return Padding(
             padding: const EdgeInsets.only(bottom: 15),
             child: TextField(
@@ -107,11 +107,12 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
               ),
             ));
       }),
-      loading ? const CircularProgressIndicator() : OutlinedButton(
-        onPressed:
-            (questionFilled && !answersFilled) ? _handleGeneratePress : null,
-        child: const Text('Generate Answers'),
-      ),
+      loading
+          ? const CircularProgressIndicator()
+          : OutlinedButton(
+              onPressed: questionFilled ? _handleGeneratePress : null,
+              child: const Text('Generate Answers'),
+            ),
     ];
   }
 
@@ -144,7 +145,7 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
       _questionController.text,
       _rightAnswerController.text,
       _wrongAnswerControllers
-          .sublist(0, _selectedAnswerCount-1)
+          .sublist(0, _selectedAnswerCount - 1)
           .map((c) => c.text)
           .toList(),
     );
