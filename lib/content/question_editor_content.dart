@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:project/content/question.dart';
 import '../gpt_service.dart';
 
+const minAnswerCount = 2;
+const maxAnswerCount = 6;
+final answerCounts = List.generate(
+    maxAnswerCount - minAnswerCount + 1, (i) => i + minAnswerCount);
+
 class QuestionEditorContent extends StatefulWidget {
   const QuestionEditorContent({super.key});
 
@@ -10,16 +15,13 @@ class QuestionEditorContent extends StatefulWidget {
 }
 
 class _QuestionEditorContentState extends State<QuestionEditorContent> {
-  final _questionFocus = FocusNode();
-  bool loading = false;
-  int _selectedAnswerCount = 4;
-  final List<int> _answerCounts = [2, 3, 4, 5, 6];
-
+  final FocusNode _questionFocus = FocusNode();
   final TextEditingController _questionController = TextEditingController();
-  final TextEditingController _rightAnswerController = TextEditingController();
-  final List<TextEditingController> _wrongAnswerControllers =
-      List.generate(5, (_) => TextEditingController());
+  final List<TextEditingController> _answerControllers =
+      List.generate(maxAnswerCount, (_) => TextEditingController());
 
+  int _selectedAnswerCount = 4;
+  bool loading = false;
   bool questionFilled = false;
   bool answersFilled = false;
 
@@ -28,8 +30,7 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
     super.initState();
     _questionFocus.requestFocus();
     _questionController.addListener(_updateButtonStates);
-    _rightAnswerController.addListener(_updateButtonStates);
-    for (var controller in _wrongAnswerControllers) {
+    for (var controller in _answerControllers) {
       controller.addListener(_updateButtonStates);
     }
   }
@@ -37,19 +38,23 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   @override
   void dispose() {
     _questionFocus.dispose();
+    _questionController.dispose();
+    for (var controller in _answerControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
   void _updateButtonStates() {
     setState(() {
       questionFilled = _questionController.text.isNotEmpty;
-      for (int i = 0; i < _selectedAnswerCount - 1; i++) {
-        if (_wrongAnswerControllers[i].text.isEmpty) {
+      for (int i = 0; i < _selectedAnswerCount; i++) {
+        if (_answerControllers[i].text.isEmpty) {
           answersFilled = false;
           return;
         }
       }
-      answersFilled = _rightAnswerController.text.isNotEmpty;
+      answersFilled = true;
     });
   }
 
@@ -65,7 +70,14 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
           children: _buildFormFields(),
         ),
       ),
-      bottomNavigationBar: _buildActionButtons(),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
+        child: FilledButton(
+          onPressed:
+              (questionFilled && answersFilled) ? _handleSavePress : null,
+          child: const Text('Save'),
+        ),
+      ),
     );
   }
 
@@ -94,7 +106,7 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
       ),
       const SizedBox(height: 10),
       SegmentedButton<int>(
-        segments: _answerCounts.map((count) {
+        segments: answerCounts.map((count) {
           return ButtonSegment<int>(
             value: count,
             label: Text(count.toString()),
@@ -111,37 +123,21 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
             : null,
         showSelectedIcon: true,
       ),
-      const SizedBox(height: 20),
-      TextField(
-        enabled: questionFilled,
-        controller: _rightAnswerController,
-        decoration: InputDecoration(
-          suffixIcon: IconButton(
-              onPressed: () {
-                _rightAnswerController.clear();
-                _updateButtonStates();
-              },
-              icon: const Icon(Icons.clear)),
-          labelText: 'Correct Answer',
-          border: const OutlineInputBorder(),
-        ),
-      ),
-      const SizedBox(height: 10),
-      ...List.generate(_selectedAnswerCount - 1, (index) {
+      ...List.generate(_selectedAnswerCount, (index) {
         return Padding(
-            padding: const EdgeInsets.only(bottom: 15),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: TextField(
               enabled: questionFilled,
-              controller: _wrongAnswerControllers[index],
+              controller: _answerControllers[index],
               decoration: InputDecoration(
                 suffixIcon: IconButton(
                     onPressed: () {
-                      _wrongAnswerControllers[index].clear();
+                      _answerControllers[index].clear();
                       _updateButtonStates();
                     },
                     icon: const Icon(Icons.clear)),
                 border: const OutlineInputBorder(),
-                labelText: 'Wrong Answer',
+                labelText: (index == 0) ? 'Correct Answer' : 'Wrong Answer',
               ),
             ));
       }),
@@ -155,24 +151,14 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
     ];
   }
 
-  Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
-      child: FilledButton(
-        onPressed: (questionFilled && answersFilled) ? _handleSavePress : null,
-        child: const Text('Save'),
-      ),
-    );
-  }
-
   void _handleGeneratePress() async {
     setState(() {
       loading = true;
     });
     final answers = await GPTService.generateResponse(_questionController.text);
-    _rightAnswerController.text = answers['correct_answer'] ?? '';
-    for (int i = 0; i < 5; i++) {
-      _wrongAnswerControllers[i].text = answers['wrong_answers']?[i] ?? '';
+    _answerControllers[0].text = answers['correct_answer'] ?? '';
+    for (int i = 1; i < maxAnswerCount; i++) {
+      _answerControllers[i].text = answers['wrong_answers']?[i - 1] ?? '';
     }
     setState(() {
       loading = false;
@@ -182,13 +168,12 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   void _handleSavePress() {
     final newQuestion = Question(
       _questionController.text,
-      _rightAnswerController.text,
-      _wrongAnswerControllers
-          .sublist(0, _selectedAnswerCount - 1)
+      _answerControllers[0].text,
+      _answerControllers
+          .sublist(1, _selectedAnswerCount)
           .map((c) => c.text)
           .toList(),
     );
-
     Navigator.pop(context, newQuestion);
   }
 }
