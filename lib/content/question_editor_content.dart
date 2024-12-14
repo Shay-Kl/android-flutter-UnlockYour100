@@ -17,7 +17,8 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   final List<TextEditingController> _wrongAnswerControllers =
       List.generate(4, (_) => TextEditingController());
 
-  bool _allFieldsFilled = false;
+  bool questionFilled = false;
+  bool answersFilled = false;
 
   @override
   void initState() {
@@ -30,20 +31,16 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   }
 
   void _updateButtonStates() {
-    bool allFilled = _questionController.text.isNotEmpty &&
-        _rightAnswerController.text.isNotEmpty;
-
-    for (int i = 0; i < _selectedWrongAnswerCount; i++) {
-      if (_wrongAnswerControllers[i].text.isEmpty) {
-        allFilled = false;
-        break;
+    setState(() {
+      questionFilled = _questionController.text.isNotEmpty;
+      for (int i = 0; i < _selectedWrongAnswerCount; i++) {
+        if (_wrongAnswerControllers[i].text.isEmpty) {
+          answersFilled = false;
+          return;
+        }
       }
-    }
-    if (mounted) {
-      setState(() {
-        _allFieldsFilled = allFilled;
-      });
-    }
+      answersFilled = _rightAnswerController.text.isNotEmpty;
+    });
   }
 
   @override
@@ -96,21 +93,18 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
         },
         showSelectedIcon: true,
       ),
-      const SizedBox(height: 30),
-      Column(
-        children: List.generate(_selectedWrongAnswerCount, (index) {
-          return Padding(
-              padding: const EdgeInsets.only(bottom: 15),
-              child: TextField(
-                controller: _wrongAnswerControllers[index],
-                decoration: const InputDecoration(
-                  labelText: 'Wrong Answer',
-                  border: OutlineInputBorder(),
-                ),
-              ));
-        }),
-      ),
-      const SizedBox(height: 20),
+      const SizedBox(height: 10),
+      ...List.generate(_selectedWrongAnswerCount, (index) {
+        return Padding(
+            padding: const EdgeInsets.only(bottom: 15),
+            child: TextField(
+              controller: _wrongAnswerControllers[index],
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Wrong Answer',
+              ),
+            ));
+      }),
     ];
   }
 
@@ -120,15 +114,18 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
       child: Row(
         children: [
           Expanded(
-            child: ElevatedButton(
-              onPressed: !_allFieldsFilled ? _handleGeneratePress : null,
+            child: FilledButton.tonal(
+              onPressed: (questionFilled && !answersFilled)
+                  ? _handleGeneratePress
+                  : null,
               child: const Text('Generate'),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: ElevatedButton(
-              onPressed: _allFieldsFilled ? _handleSavePress : null,
+            child: FilledButton(
+              onPressed:
+                  (questionFilled && answersFilled) ? _handleSavePress : null,
               child: const Text('Save'),
             ),
           ),
@@ -138,7 +135,14 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   }
 
   void _handleGeneratePress() {
-    // Handle generate action when fields are incomplete
+    if (_rightAnswerController.text.isEmpty) {
+      _rightAnswerController.text = 'ph';
+    }
+    for (var controller in _wrongAnswerControllers) {
+      if (controller.text.isEmpty) {
+        controller.text = 'ph';
+      }
+    }
   }
 
   void _handleSavePress() {

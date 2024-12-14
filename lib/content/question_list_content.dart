@@ -15,7 +15,7 @@ class QuestionListContent extends StatefulWidget {
 }
 
 class _QuestionListContentState extends State<QuestionListContent> {
-  var questions = [ph1, ph2, ph1, ph2, ph1, ph2, ph1, ph2, ph1, ph2];
+  var questions = [ph1, ph2];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,8 +66,7 @@ class QuestionCard extends StatelessWidget {
           children: q.answers.asMap().entries.map<Widget>((entry) {
             final answer = entry.value;
             return Container(
-              color: entry.key == 0 ? Colors.green.shade50 : Colors.red.shade50,
-              padding: const EdgeInsets.symmetric(vertical: 2),
+              padding: const EdgeInsets.symmetric(vertical: 3),
               child: Text('- $answer'),
             );
           }).toList(),
