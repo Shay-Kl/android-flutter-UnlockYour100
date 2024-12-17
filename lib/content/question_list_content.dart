@@ -55,11 +55,6 @@ class QuestionCard extends StatelessWidget {
       elevation: 4.0,
       margin: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
       child: ListTile(
-        titleTextStyle: const TextStyle(
-          color: Colors.black,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
         title: Text(q.question),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
