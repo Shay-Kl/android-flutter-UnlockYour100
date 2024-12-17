@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:project/content/question.dart';
+import 'package:project/question.dart';
 import '../gpt_service.dart';
 
 const minAnswerCount = 2;

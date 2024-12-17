@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'content/question_set_list_content.dart';
-import 'content/stats_content.dart';
-import 'content/other_content.dart';
+import '../content/question_set_list_content.dart';
+import '../content/stats_content.dart';
+import '../content/other_content.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
