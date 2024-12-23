@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 import 'package:project/question.dart';
 import '../gpt_service.dart';
 
@@ -8,10 +9,11 @@ final answerCounts = List.generate(
     maxAnswerCount - minAnswerCount + 1, (i) => i + minAnswerCount);
 
 class QuestionEditorContent extends StatefulWidget {
-  const QuestionEditorContent({super.key});
-
+  const QuestionEditorContent({super.key}) : question = const Question("", "", []);
+  const QuestionEditorContent.edit({super.key, required this.question});
+  final Question question;
   @override
-  State<QuestionEditorContent> createState() => _QuestionEditorContentState();
+  State<QuestionEditorContent> createState() => _QuestionEditorContentState(question);
 }
 
 class _QuestionEditorContentState extends State<QuestionEditorContent> {
@@ -20,9 +22,16 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   final List<TextEditingController> _answerControllers =
       List.generate(maxAnswerCount, (_) => TextEditingController());
   final _formKey = GlobalKey<FormState>();
-  int _selectedAnswerCount = 4;
+  int _selectedAnswerCount;
   bool loading = false;
   bool questionFilled = false;
+  
+  _QuestionEditorContentState(Question question): _selectedAnswerCount = max(question.answers.length, minAnswerCount) {
+    _questionController.text = question.question;
+    for (int i = 0; i < question.answers.length; i++) {
+      _answerControllers[i].text = question.answers[i];
+    }
+  }
 
   @override
   void initState() {
