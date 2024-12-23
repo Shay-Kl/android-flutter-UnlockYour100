@@ -21,7 +21,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        final isFirstRouteInCurrentTab = 
+            !await _navigatorKeys[_currentIndex].currentState!.maybePop();
+        if (!isFirstRouteInCurrentTab) {
+          return;
+        }
+      },
+      child: Scaffold(
       body: Stack(
         children: [
           _buildOffstageNavigator(0),
@@ -56,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildOffstageNavigator(int index) {
