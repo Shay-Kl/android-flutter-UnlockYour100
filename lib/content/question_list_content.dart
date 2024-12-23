@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'question_editor_content.dart';
 import '../question.dart';
 
@@ -25,11 +26,15 @@ class _QuestionListContentState extends State<QuestionListContent> {
       body: ListView.builder(
         itemCount: questions.length,
         itemBuilder: (context, index) {
-          return GestureDetector(
-              onTap: () => editQuestion(index),
-              child: QuestionCard(
-                q: questions[index],
-              ));
+          return Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
+              child: Card.outlined(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () => editQuestion(index),
+                    child: QuestionCardContents(q: questions[index]),
+                  )));
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -52,6 +57,8 @@ class _QuestionListContentState extends State<QuestionListContent> {
   }
 
   void editQuestion(int index) async {
+    await Future.delayed(const Duration(milliseconds: 150));
+
     final editedQuestion = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -68,27 +75,24 @@ class _QuestionListContentState extends State<QuestionListContent> {
   }
 }
 
-class QuestionCard extends StatelessWidget {
+class QuestionCardContents extends StatelessWidget {
   final Question q;
-  const QuestionCard({super.key, required this.q});
+  const QuestionCardContents({super.key, required this.q});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-        elevation: 4.0,
-        margin: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
-        child: ListTile(
-          title: Text(q.question),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: q.answers.asMap().entries.map<Widget>((entry) {
-              final answer = entry.value;
-              return Container(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: Text('- $answer'),
-              );
-            }).toList(),
-          ),
-        ));
+    return ListTile(
+      title: Text(q.question),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: q.answers.asMap().entries.map<Widget>((entry) {
+          final answer = entry.value;
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            child: Text('- $answer'),
+          );
+        }).toList(),
+      ),
+    );
   }
 }
