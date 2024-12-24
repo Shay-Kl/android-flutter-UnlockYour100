@@ -29,7 +29,7 @@ class _QuestionListContentState extends State<QuestionListContent> {
           itemCount: questions.length,
           itemBuilder: (context, index) {
             return Dismissible(
-              key: Key(questions[index].question), // Unique key for each item
+              key: ValueKey('${index}_${questions[index].question}'),
               confirmDismiss: (direction) async {
                 return await showDialog(
                   context: context,
