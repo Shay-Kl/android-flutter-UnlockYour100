@@ -15,7 +15,7 @@ class QuestionListContent extends StatefulWidget {
 }
 
 class _QuestionListContentState extends State<QuestionListContent> {
-  List<Question> questions = [ph1, ph2];
+  List<Question> questions = [ph1, ph2, ph1, ph2, ph1, ph2, ph1, ph2, ph1, ph2];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,12 +28,53 @@ class _QuestionListContentState extends State<QuestionListContent> {
         body: ListView.builder(
           itemCount: questions.length,
           itemBuilder: (context, index) {
-            return Card.outlined(
-              margin: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(10),
-                onTap: () => editQuestion(index),
-                child: QuestionCardContents(q: questions[index]),
+            return Dismissible(
+              key: Key(questions[index].question), // Unique key for each item
+              confirmDismiss: (direction) async {
+                return await showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Delete Question'),
+                      content: const Text('Are you sure you want to delete this question?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              onDismissed: (direction) {
+                setState(() {
+                  questions.removeAt(index);
+                });
+              },
+              background: Container(
+                color: Colors.red,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: const Icon(Icons.delete, color: Colors.white),
+              ),
+              secondaryBackground: Container(
+                color: Colors.red,
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: const Icon(Icons.delete, color: Colors.white),
+              ),
+              child: Card.outlined(
+                margin: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () => editQuestion(index),
+                  child: QuestionCardContents(q: questions[index]),
+                ),
               ),
             );
           },
