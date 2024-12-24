@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
 import 'question_editor_content.dart';
 import '../question.dart';
 
@@ -20,22 +19,25 @@ class _QuestionListContentState extends State<QuestionListContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Geography 101'),
-      ),
-      body: ListView.builder(
-        itemCount: questions.length,
-        itemBuilder: (context, index) {
-          return Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
-              child: Card.outlined(
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(10),
-                    onTap: () => editQuestion(index),
-                    child: QuestionCardContents(q: questions[index]),
-                  )));
-        },
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          const SliverAppBar.large(
+            title: Text('Geography 101'),
+          ),
+        ],
+        body: ListView.builder(
+          itemCount: questions.length,
+          itemBuilder: (context, index) {
+            return Card.outlined(
+              margin: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () => editQuestion(index),
+                child: QuestionCardContents(q: questions[index]),
+              ),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: createQuestion,
@@ -57,8 +59,6 @@ class _QuestionListContentState extends State<QuestionListContent> {
   }
 
   void editQuestion(int index) async {
-    await Future.delayed(const Duration(milliseconds: 150));
-
     final editedQuestion = await Navigator.push(
       context,
       MaterialPageRoute(
