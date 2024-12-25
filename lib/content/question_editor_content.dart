@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:project/question.dart';
 import '../gpt_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/question_provider.dart';
 
 const minAnswerCount = 2;
 const maxAnswerCount = 5;
@@ -197,6 +199,10 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
             .map((c) => c.text)
             .toList(),
       );
+
+      Provider.of<QuestionProvider>(context, listen: false)
+          .createQuestion(newQuestion);
+
       Navigator.pop(context, newQuestion);
     }
   }

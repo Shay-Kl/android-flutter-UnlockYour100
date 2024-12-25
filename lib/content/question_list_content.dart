@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/question_provider.dart';
 import 'question_editor_content.dart';
 import '../question.dart';
-
-const ph1 = Question('What is the capital of Israel?', 'Jerusalem',
-    ['Yotvata', 'Haifa', 'Berlin']);
-const ph2 = Question('Where did the fellowship of the ring head?', 'Mordor',
-    ['Valinor', 'Rhun', 'Numenor']);
 
 class QuestionListContent extends StatefulWidget {
   const QuestionListContent({super.key});
@@ -15,14 +12,29 @@ class QuestionListContent extends StatefulWidget {
 }
 
 class _QuestionListContentState extends State<QuestionListContent> {
-  List<Question> questions = [ph1, ph2, ph1, ph2, ph1, ph2, ph1, ph2, ph1, ph2];
+  List<Question> questions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchQuestionsFromFirestore();
+  }
+
+  Future<void> _fetchQuestionsFromFirestore() async {
+    final provider = Provider.of<QuestionProvider>(context, listen: false);
+    final fetchedQuestions = await provider.readAllQuestions();
+    setState(() {
+      questions = fetchedQuestions;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           const SliverAppBar.large(
-            title: Text('Geography 101'),
+            title: Text('Question List'),
           ),
         ],
         body: ListView.builder(

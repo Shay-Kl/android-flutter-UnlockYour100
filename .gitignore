@@ -13,3 +13,4 @@ android/.gradle/
 android/app/build/
 android/gradle/
 android/gradlew.bat
+pubspec.lock

@@ -11,7 +11,7 @@ class QuestionSetListContent extends StatelessWidget {
         title: const Text('Question Set List Screen'),
         actions: [
           IconButton(
-            icon: Icon(Icons.settings),
+            icon: const Icon(Icons.settings),
             onPressed: () {
               // Handle settings action
             },
