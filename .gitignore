@@ -5,12 +5,4 @@
 .pub-cache/
 .pub/
 build/
-android/app/debug/
-android/app/profile/
-android/app/release/
-android/local.properties
-android/.gradle/
-android/app/build/
-android/gradle/
-android/gradlew.bat
 .DS_Store
