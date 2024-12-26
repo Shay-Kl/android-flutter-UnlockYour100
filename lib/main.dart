@@ -3,6 +3,7 @@ import 'package:project/providers/question_provider.dart';
 import 'screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'providers/auth_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,10 +19,7 @@ class MainApp extends StatelessWidget {
       future: _initialization,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Scaffold(
-            body: Center(
-              child: Text(snapshot.error.toString(),
-                textDirection: TextDirection.ltr)));
+          return Scaffold(body: Center(child: Text(snapshot.error.toString(), textDirection: TextDirection.ltr)));
         }
         if (snapshot.connectionState == ConnectionState.done) {
           return const MyNotifierApp();
@@ -36,8 +34,11 @@ class MyNotifierApp extends StatelessWidget {
   const MyNotifierApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => QuestionProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (context) => QuestionProvider()),
+      ],
       child: const MaterialApp(
         home: MyApp(),
       ),
@@ -49,12 +50,12 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(          
+    return MaterialApp(
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-      ), 
+      ),
       home: const LoginScreen(),
-      debugShowCheckedModeBanner: false
+      debugShowCheckedModeBanner: false,
     );
   }
 }

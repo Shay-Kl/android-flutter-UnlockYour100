@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:project/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../providers/question_provider.dart';
-import 'question_editor_content.dart';
-import '../question.dart';
+import 'question_editor_screen.dart';
+import '../models/question.dart';
 
 class QuestionListContent extends StatefulWidget {
   const QuestionListContent({super.key});
@@ -13,6 +14,7 @@ class QuestionListContent extends StatefulWidget {
 
 class _QuestionListContentState extends State<QuestionListContent> {
   List<Question> questions = [];
+  static const setName = 'default';
 
   @override
   void initState() {
@@ -21,8 +23,9 @@ class _QuestionListContentState extends State<QuestionListContent> {
   }
 
   Future<void> _fetchQuestionsFromFirestore() async {
+    final userEmail = Provider.of<AuthProvider>(context, listen: false).userEmail;
     final provider = Provider.of<QuestionProvider>(context, listen: false);
-    final fetchedQuestions = await provider.readAllQuestions();
+    final fetchedQuestions = await provider.readQuestionsForUser(userEmail!, setName);
     setState(() {
       questions = fetchedQuestions;
     });
@@ -64,9 +67,7 @@ class _QuestionListContentState extends State<QuestionListContent> {
                 );
               },
               onDismissed: (direction) {
-                setState(() {
-                  questions.removeAt(index);
-                });
+                deleteQuestion(index);
               },
               background: Container(
                 color: Colors.red,
@@ -102,11 +103,17 @@ class _QuestionListContentState extends State<QuestionListContent> {
   void createQuestion() async {
     final newQuestion = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const QuestionEditorContent()),
+      MaterialPageRoute(builder: (context) => QuestionEditorContent()),
     );
+
     if (newQuestion != null) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      var username = '${authProvider.userEmail}';
+      final updatedQuestion = await Provider.of<QuestionProvider>(context, listen: false).createQuestionForUser(newQuestion, username, setName);
+
       setState(() {
-        questions.add(newQuestion);
+        print(updatedQuestion.id);
+        questions.add(updatedQuestion);
       });
     }
   }
@@ -121,10 +128,29 @@ class _QuestionListContentState extends State<QuestionListContent> {
       ),
     );
     if (editedQuestion != null) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userEmail = authProvider.userEmail!;
+      final questionProvider = Provider.of<QuestionProvider>(context, listen: false);
+      editedQuestion.id = questions[index].id;
+      await questionProvider.updateQuestionForUser(editedQuestion, userEmail, setName);
+
       setState(() {
         questions[index] = editedQuestion;
       });
     }
+  }
+
+  Future<void> deleteQuestion(int index) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final userEmail = authProvider.userEmail!;
+    final questionProvider = Provider.of<QuestionProvider>(context, listen: false);
+    final questionToDelete = questions[index];
+
+    await questionProvider.deleteQuestionForUser(questionToDelete, userEmail, setName);
+
+    setState(() {
+      questions.removeAt(index);
+    });
   }
 }
 

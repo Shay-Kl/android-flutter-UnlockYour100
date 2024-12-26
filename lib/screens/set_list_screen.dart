@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'question_list_content.dart';
+import 'question_list_screen.dart';
 
 class QuestionSetListContent extends StatelessWidget {
   const QuestionSetListContent({super.key});

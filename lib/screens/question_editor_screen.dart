@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import 'package:project/question.dart';
-import '../gpt_service.dart';
-import 'package:provider/provider.dart';
-import '../providers/question_provider.dart';
+import 'package:project/models/question.dart';
+import '../utils/gpt_service.dart';
 
 const minAnswerCount = 2;
 const maxAnswerCount = 5;
-final answerCounts = List.generate(
-    maxAnswerCount - minAnswerCount + 1, (i) => i + minAnswerCount);
+final answerCounts = List.generate(maxAnswerCount - minAnswerCount + 1, (i) => i + minAnswerCount);
 
 class QuestionEditorContent extends StatefulWidget {
-  const QuestionEditorContent({super.key}) : question = const Question("", "", []);
+  QuestionEditorContent({super.key}) : question = Question(question: "", correctAnswer: "", wrongAnswers: []);
   const QuestionEditorContent.edit({super.key, required this.question});
   final Question question;
   @override
@@ -21,14 +18,13 @@ class QuestionEditorContent extends StatefulWidget {
 class _QuestionEditorContentState extends State<QuestionEditorContent> {
   final FocusNode _questionFocus = FocusNode();
   final TextEditingController _questionController = TextEditingController();
-  final List<TextEditingController> _answerControllers =
-      List.generate(maxAnswerCount, (_) => TextEditingController());
+  final List<TextEditingController> _answerControllers = List.generate(maxAnswerCount, (_) => TextEditingController());
   final _formKey = GlobalKey<FormState>();
   int _selectedAnswerCount;
   bool loading = false;
   bool questionFilled = false;
-  
-  _QuestionEditorContentState(Question question): _selectedAnswerCount = max(question.answers.length, minAnswerCount) {
+
+  _QuestionEditorContentState(Question question) : _selectedAnswerCount = max(question.answers.length, minAnswerCount) {
     _questionController.text = question.question;
     for (int i = 0; i < question.answers.length; i++) {
       _answerControllers[i].text = question.answers[i];
@@ -66,7 +62,6 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('New Question'),
-        
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -192,17 +187,10 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
   void _handleSavePress() {
     if (_formKey.currentState!.validate()) {
       final newQuestion = Question(
-        _questionController.text,
-        _answerControllers[0].text,
-        _answerControllers
-            .sublist(1, _selectedAnswerCount)
-            .map((c) => c.text)
-            .toList(),
+        question: _questionController.text,
+        correctAnswer: _answerControllers[0].text,
+        wrongAnswers: _answerControllers.sublist(1, _selectedAnswerCount).map((c) => c.text).toList(),
       );
-
-      Provider.of<QuestionProvider>(context, listen: false)
-          .createQuestion(newQuestion);
-
       Navigator.pop(context, newQuestion);
     }
   }

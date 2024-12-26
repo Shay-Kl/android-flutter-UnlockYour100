@@ -14,3 +14,4 @@ android/app/build/
 android/gradle/
 android/gradlew.bat
 pubspec.lock
+.DS_Store

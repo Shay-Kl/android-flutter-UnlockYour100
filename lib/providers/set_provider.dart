@@ -1,0 +1,55 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import '../models/set.dart';
+import '../models/question.dart';
+
+class SetProvider extends ChangeNotifier {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<void> createSet(String userEmail, QuestionSet qSet) async {
+    await _firestore.collection('users').doc(userEmail).collection('sets').doc(qSet.setName).set({
+      'setName': qSet.setName,
+      'isActive': qSet.isActive,
+    });
+
+    for (final question in qSet.questions) {
+      await _firestore.collection('users').doc(userEmail).collection('sets').doc(qSet.setName).collection('questions').add(question.toMap());
+    }
+    notifyListeners();
+  }
+
+  Future<List<QuestionSet>> readSetsForUser(String userEmail) async {
+    final setsSnapshot = await _firestore.collection('users').doc(userEmail).collection('sets').get();
+    final List<QuestionSet> sets = [];
+    for (final doc in setsSnapshot.docs) {
+      final data = doc.data();
+      final setName = data['setName'] as String;
+      final isActive = data['isActive'] as bool? ?? true;
+      final questionsSnap = await _firestore.collection('users').doc(userEmail).collection('sets').doc(setName).collection('questions').get();
+      final List<Question> questionList = questionsSnap.docs.map((qDoc) => Question.fromDocument(qDoc)).toList();
+      sets.add(QuestionSet(
+        setName: setName,
+        isActive: isActive,
+        questions: questionList,
+      ));
+    }
+    return sets;
+  }
+
+  Future<List<String>> getSetNames(String userEmail) async {
+    final setsSnapshot = await _firestore.collection('users').doc(userEmail).collection('sets').get();
+    return setsSnapshot.docs.map((doc) => doc.id).toList();
+  }
+
+  Future<void> deleteSet(String userEmail, String setName) async {
+    final setRef = _firestore.collection('users').doc(userEmail).collection('sets').doc(setName);
+
+    final questionsSnapshot = await setRef.collection('questions').get();
+    for (final doc in questionsSnapshot.docs) {
+      await doc.reference.delete();
+    }
+
+    await setRef.delete();
+    notifyListeners();
+  }
+}
