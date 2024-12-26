@@ -1,30 +1,36 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:project/models/question.dart';
+import 'package:project/utils/llm_service';
 import '../utils/gpt_service.dart';
 
 const minAnswerCount = 2;
 const maxAnswerCount = 5;
-final answerCounts = List.generate(maxAnswerCount - minAnswerCount + 1, (i) => i + minAnswerCount);
+final answerCounts = List.generate(
+    maxAnswerCount - minAnswerCount + 1, (i) => i + minAnswerCount);
 
 class QuestionEditorContent extends StatefulWidget {
-  QuestionEditorContent({super.key}) : question = Question(question: "", correctAnswer: "", wrongAnswers: []);
+  QuestionEditorContent({super.key})
+      : question = Question(question: "", correctAnswer: "", wrongAnswers: []);
   const QuestionEditorContent.edit({super.key, required this.question});
   final Question question;
   @override
-  State<QuestionEditorContent> createState() => _QuestionEditorContentState(question);
+  State<QuestionEditorContent> createState() =>
+      _QuestionEditorContentState(question);
 }
 
 class _QuestionEditorContentState extends State<QuestionEditorContent> {
   final FocusNode _questionFocus = FocusNode();
   final TextEditingController _questionController = TextEditingController();
-  final List<TextEditingController> _answerControllers = List.generate(maxAnswerCount, (_) => TextEditingController());
+  final List<TextEditingController> _answerControllers =
+      List.generate(maxAnswerCount, (_) => TextEditingController());
   final _formKey = GlobalKey<FormState>();
   int _selectedAnswerCount;
   bool loading = false;
   bool questionFilled = false;
 
-  _QuestionEditorContentState(Question question) : _selectedAnswerCount = max(question.answers.length, minAnswerCount) {
+  _QuestionEditorContentState(Question question)
+      : _selectedAnswerCount = max(question.answers.length, minAnswerCount) {
     _questionController.text = question.question;
     for (int i = 0; i < question.answers.length; i++) {
       _answerControllers[i].text = question.answers[i];
@@ -174,7 +180,7 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
     setState(() {
       loading = true;
     });
-    final answers = await GPTService.generateResponse(_questionController.text);
+    final answers = await LLMService.generateAnswers(_questionController.text);
     _answerControllers[0].text = answers['correct_answer'] ?? '';
     for (int i = 1; i < maxAnswerCount; i++) {
       _answerControllers[i].text = answers['wrong_answers']?[i - 1] ?? '';
@@ -189,7 +195,10 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
       final newQuestion = Question(
         question: _questionController.text,
         correctAnswer: _answerControllers[0].text,
-        wrongAnswers: _answerControllers.sublist(1, _selectedAnswerCount).map((c) => c.text).toList(),
+        wrongAnswers: _answerControllers
+            .sublist(1, _selectedAnswerCount)
+            .map((c) => c.text)
+            .toList(),
       );
       Navigator.pop(context, newQuestion);
     }
