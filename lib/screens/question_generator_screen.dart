@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import '../utils/llm_service.dart';
 
 enum SourceType { text, file }
 
@@ -14,13 +16,17 @@ class QuestionGeneratorScreen extends StatefulWidget {
 }
 
 class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
-  int _selectedQuestionCount = 10;
+  int _selectedQuestionCount = 8;
   Difficulty _selectedDifficulty = Difficulty.moderate; // Updated type
   SourceType _materialSourceType = SourceType.file;
   SourceType _styleSourceType = SourceType.file;
 
   final TextEditingController _materialTextController = TextEditingController();
   final TextEditingController _styleTextController = TextEditingController();
+
+  PlatformFile? _materialFile;
+  PlatformFile? _styleFile;
+  bool loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +64,7 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
               textController: _materialTextController,
               textHint: 'Describe the topic of questions you want to generate',
               fileButtonText: 'Upload Course Material',
+              selectedFile: _materialFile,
             ),
             const SizedBox(height: 20),
             Text(
@@ -66,23 +73,26 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
             ),
             const SizedBox(height: 8),
             _buildSourceSelector(
-              selectedType: _styleSourceType,
-              onChanged: (SourceType? value) {
-                if (value != null) setState(() => _styleSourceType = value);
-              },
-              textController: _styleTextController,
-              textHint: "Describe the format of questions you want to generate",
-              fileButtonText: 'Upload Course Questions',
-            ),
+                selectedType: _styleSourceType,
+                onChanged: (SourceType? value) {
+                  if (value != null) setState(() => _styleSourceType = value);
+                },
+                textController: _styleTextController,
+                textHint:
+                    "Describe the format of questions you want to generate",
+                fileButtonText: 'Upload Course Questions',
+                selectedFile: _styleFile),
           ],
         ),
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        child: FilledButton(
-          onPressed: _handleGenerate,
-          child: const Text('Generate'),
-        ),
+        child: (loading)
+            ? const LinearProgressIndicator()
+            : FilledButton(
+                onPressed: _handleGenerate,
+                child: const Text('Generate'),
+              ),
       ),
     );
   }
@@ -93,6 +103,7 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
     required TextEditingController textController,
     required String textHint,
     required String fileButtonText,
+    PlatformFile? selectedFile,
   }) {
     return Column(
       children: [
@@ -128,10 +139,24 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
             ),
           )
         else
-          OutlinedButton.icon(
-            onPressed: _handleFileUpload,
-            icon: const Icon(Icons.upload_file),
-            label: Text(fileButtonText),
+          Column(
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _handleFileUpload(
+                  isMaterial: fileButtonText.contains('Material'),
+                ),
+                icon: const Icon(Icons.upload_file),
+                label: Text(fileButtonText),
+              ),
+              if (selectedFile != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    'Selected: ${selectedFile.name}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+            ],
           ),
       ],
     );
@@ -149,8 +174,8 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
         Slider(
           value: _selectedQuestionCount.toDouble(),
           min: 1,
-          max: 20,
-          divisions: 19,
+          max: 15,
+          divisions: 14,
           label: _selectedQuestionCount.toString(),
           onChanged: (value) {
             setState(() {
@@ -193,12 +218,36 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
     );
   }
 
-  void _handleFileUpload() {
-    // ...to be implemented...
+  Future<void> _handleFileUpload({required bool isMaterial}) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+    if (result != null) {
+      setState(() {
+        if (isMaterial) {
+          _materialFile = result.files.first;
+        } else {
+          _styleFile = result.files.first;
+        }
+      });
+    }
+
   }
 
-  void _handleGenerate() {
-    // ...call gemini or some service to generate questions...
+   void _handleGenerate () async {
+    setState(() {
+      loading = true;
+    });
+    final questions = await QuestionGenerator.generate(
+      _materialTextController.text,
+      _styleTextController.text,
+      _selectedQuestionCount,
+      _selectedDifficulty,
+    );
+    loading = false;
+    Navigator.pop(context, questions);
+
   }
 
   @override

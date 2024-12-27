@@ -6,6 +6,7 @@ import '../providers/question_provider.dart';
 import 'question_editor_screen.dart';
 import 'question_generator_screen.dart';
 import '../models/question.dart';
+import 'package:firebase_vertexai/firebase_vertexai.dart';
 
 class QuestionListContent extends StatefulWidget {
   final QuestionSet s;
@@ -48,28 +49,7 @@ class _QuestionListContentState extends State<QuestionListContent> {
           itemBuilder: (context, index) {
             return Dismissible(
               key: ValueKey('${index}_${questions[index].question}'),
-              confirmDismiss: (direction) async {
-                return await showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Delete Question'),
-                      content: const Text(
-                          'Are you sure you want to delete this question?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text('Delete'),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
+              confirmDismiss: (direction) async => true,
               onDismissed: (direction) {
                 deleteQuestion(index);
               },
@@ -109,13 +89,7 @@ class _QuestionListContentState extends State<QuestionListContent> {
           SpeedDialChild(
             child: const Icon(Icons.auto_awesome),
             label: 'Generate with AI',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const QuestionGeneratorScreen()),
-              );
-            },
+            onTap: generateQuestions,
           ),
         ],
       ),
@@ -171,6 +145,32 @@ class _QuestionListContentState extends State<QuestionListContent> {
     setState(() {
       questions.removeAt(index);
     });
+  }
+
+  void generateQuestions() async {
+    final newJsonQuestions = await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => const QuestionGeneratorScreen()));
+    if(newJsonQuestions == null) return;
+    for (final question in newJsonQuestions) {
+      List<String> wrongAnswers = [];
+      for (int i = 1; i < question['wrong_answers'].length; i++) {
+        wrongAnswers.add(question['wrong_answers'][i]);
+      }
+      final updatedQuestion =
+          await Provider.of<QuestionProvider>(context, listen: false)
+              .createQuestionForUser(
+                  Question(
+                      question: question['question'],
+                      correctAnswer: question['correct_answer'],
+                      wrongAnswers: wrongAnswers),
+                  setName);
+      setState(() {
+        print(updatedQuestion.id);
+        questions.add(updatedQuestion);
+      });
+    }
   }
 }
 

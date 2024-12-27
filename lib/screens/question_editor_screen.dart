@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:project/models/question.dart';
-import 'package:project/utils/llm_service';
-import '../utils/gpt_service.dart';
+import 'package:project/utils/llm_service.dart';
 
 const minAnswerCount = 2;
 const maxAnswerCount = 5;
@@ -180,7 +179,7 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
     setState(() {
       loading = true;
     });
-    final answers = await LLMService.generateAnswers(_questionController.text);
+    final answers = await AnswerGenerator.generate(_questionController.text);
     _answerControllers[0].text = answers['correct_answer'] ?? '';
     for (int i = 1; i < maxAnswerCount; i++) {
       _answerControllers[i].text = answers['wrong_answers']?[i - 1] ?? '';
