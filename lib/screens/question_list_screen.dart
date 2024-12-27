@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:project/models/set.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import '../providers/question_provider.dart';
 import 'question_editor_screen.dart';
+import 'question_generator_screen.dart';
 import '../models/question.dart';
 
 class QuestionListContent extends StatefulWidget {
@@ -96,9 +98,26 @@ class _QuestionListContentState extends State<QuestionListContent> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: createQuestion,
-        child: const Icon(Icons.add),
+      floatingActionButton: SpeedDial(
+        icon: Icons.add,
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.edit),
+            label: 'Create manually',
+            onTap: createQuestion,
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.auto_awesome),
+            label: 'Generate with AI',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const QuestionGeneratorScreen()),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

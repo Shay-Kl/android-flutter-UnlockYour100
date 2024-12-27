@@ -116,7 +116,7 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
         const Padding(
           padding: EdgeInsets.only(right: 20),
           child: Text(
-            'Answers',
+            'Answers:',
             style: TextStyle(
               fontWeight: FontWeight.w500,
             ),

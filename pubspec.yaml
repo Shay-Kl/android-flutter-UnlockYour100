@@ -13,6 +13,7 @@ dependencies:
   firebase_vertexai: ^1.0.4
   flutter:
     sdk: flutter
+  flutter_speed_dial: ^7.0.0
   google_sign_in: ^6.2.2
   http: ^1.2.2
   provider: ^6.1.2
