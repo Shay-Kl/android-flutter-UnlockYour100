@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:project/screens/question_list_screen.dart';
 import '../models/set.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
 import '../providers/set_provider.dart';
 
 class SetListScreen extends StatefulWidget {
@@ -13,16 +12,13 @@ class SetListScreen extends StatefulWidget {
 }
 
 class _SetListScreenState extends State<SetListScreen> {
-  //final authStatus = context.watch<AuthentificationNotifier>();
-  //List<QuestionSet> questionSets = authStatus.Sets;
-
   late Future<List<QuestionSet>> questionSets;
-
+  get setProvider => Provider.of<SetProvider>(context, listen: false);
+  
   @override
   void initState() {
     super.initState();
-    final provider = Provider.of<SetProvider>(context, listen: false);
-    questionSets = provider.readSetsForUser('shay.kleiman@gmail.com');
+    questionSets = setProvider.readSetsForUser();
   }
 
   void _showNewSetDialog() {
@@ -55,11 +51,7 @@ class _SetListScreenState extends State<SetListScreen> {
                     questionSets.then((sets) {
                       sets.add(newSet);
                     });
-                    var userEmail =
-                        Provider.of<AuthProvider>(context, listen: false)
-                            .userEmail;
-                    Provider.of<SetProvider>(context, listen: false)
-                        .createSet(userEmail!, newSet);
+                    setProvider.createSet(newName);
                   });
                 }
                 Navigator.pop(context); // Close the dialog
@@ -124,7 +116,6 @@ class _SwitchExampleState extends State<SwitchExample> {
     return Switch(
       // This bool value toggles the switch.
       value: widget.s.isActive,
-      activeColor: Colors.green,
       onChanged: (bool value) {
         // This is called when the user toggles the switch.
         setState(() {

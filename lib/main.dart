@@ -36,13 +36,25 @@ class MyAppInit extends StatelessWidget {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // AuthProvider: The root provider for authentication
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (context) => QuestionProvider()),
-        ChangeNotifierProvider(create: (context) => SetProvider()),
+
+        // Both QuestionProvider and SetProvider depend on AuthProvider
+        ChangeNotifierProxyProvider<AuthProvider, QuestionProvider>(
+          create: (_) => QuestionProvider(''),
+          update: (_, authProvider, questionProvider) =>
+              QuestionProvider(authProvider.userEmail ?? ''),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, SetProvider>(
+          create: (_) => SetProvider(''),
+          update: (_, authProvider, setProvider) =>
+              SetProvider(authProvider.userEmail ?? ''),
+        ),
       ],
       child: MaterialApp(
         theme: ThemeData(

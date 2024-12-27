@@ -4,12 +4,22 @@ import '../models/question.dart';
 
 class QuestionProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final String userEmail;
 
-  Future<Question> createQuestionForUser(Question q, String userEmail, String setName) async {
+  QuestionProvider(this.userEmail);
+
+  questionCollection(String setName) {
+    return _firestore
+        .collection('users')
+        .doc(userEmail)
+        .collection('sets')
+        .doc(setName)
+        .collection('questions');
+  }
+
+  Future<Question> createQuestionForUser(Question q, String setName) async {
     try {
-      // users -> userEmail -> sets -> setName -> questions
-      final questionCollection = _firestore.collection('users').doc(userEmail).collection('sets').doc(setName).collection('questions');
-      final docRef = await questionCollection.add(q.toMap());
+      final docRef = await questionCollection(setName).add(q.toMap());
       q.id = docRef.id;
       await docRef.update({'id': q.id});
       notifyListeners();
@@ -21,9 +31,15 @@ class QuestionProvider extends ChangeNotifier {
     }
   }
 
-  Future<List<Question>> readQuestionsForUser(String userEmail, String setName) async {
+  Future<List<Question>> readQuestionsForUser(String setName) async {
     try {
-      final snapshot = await _firestore.collection('users').doc(userEmail).collection('sets').doc(setName).collection('questions').get();
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(userEmail)
+          .collection('sets')
+          .doc(setName)
+          .collection('questions')
+          .get();
       return snapshot.docs.map((doc) => Question.fromDocument(doc)).toList();
     } catch (e) {
       print('Error reading questions for user: $e');
@@ -31,13 +47,13 @@ class QuestionProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> updateQuestionForUser(Question q, String userEmail, String setName) async {
+  Future<void> updateQuestionForUser(Question q, String setName) async {
     try {
       if (q.id == null) {
         throw Exception("Question ID is null. Cannot update.");
       }
 
-      final questionDoc = _firestore.collection('users').doc(userEmail).collection('sets').doc(setName).collection('questions').doc(q.id);
+      final questionDoc = questionCollection(setName).doc(q.id);
       await questionDoc.update(q.toMap());
       notifyListeners();
     } catch (e) {
@@ -45,12 +61,12 @@ class QuestionProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteQuestionForUser(Question q, String userEmail, String setName) async {
+  Future<void> deleteQuestionForUser(Question q, String setName) async {
     try {
       if (q.id == null) {
         throw Exception("Question ID is null. Cannot delete.");
       }
-      final questionDoc = _firestore.collection('users').doc(userEmail).collection('sets').doc(setName).collection('questions').doc(q.id);
+      final questionDoc = questionCollection(setName).doc(q.id);
       await questionDoc.delete();
 
       notifyListeners();

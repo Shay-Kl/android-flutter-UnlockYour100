@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:project/models/set.dart';
-import 'package:project/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../providers/question_provider.dart';
 import 'question_editor_screen.dart';
@@ -26,11 +25,8 @@ class _QuestionListContentState extends State<QuestionListContent> {
   }
 
   Future<void> _fetchQuestionsFromFirestore() async {
-    final userEmail =
-        Provider.of<AuthProvider>(context, listen: false).userEmail;
     final provider = Provider.of<QuestionProvider>(context, listen: false);
-    final fetchedQuestions =
-        await provider.readQuestionsForUser(userEmail!, setName);
+    final fetchedQuestions = await provider.readQuestionsForUser(setName);
     setState(() {
       questions = fetchedQuestions;
     });
@@ -114,11 +110,9 @@ class _QuestionListContentState extends State<QuestionListContent> {
     );
 
     if (newQuestion != null) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      var username = '${authProvider.userEmail}';
       final updatedQuestion =
           await Provider.of<QuestionProvider>(context, listen: false)
-              .createQuestionForUser(newQuestion, username, setName);
+              .createQuestionForUser(newQuestion, setName);
 
       setState(() {
         print(updatedQuestion.id);
@@ -137,13 +131,10 @@ class _QuestionListContentState extends State<QuestionListContent> {
       ),
     );
     if (editedQuestion != null) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final userEmail = authProvider.userEmail!;
       final questionProvider =
           Provider.of<QuestionProvider>(context, listen: false);
       editedQuestion.id = questions[index].id;
-      await questionProvider.updateQuestionForUser(
-          editedQuestion, userEmail, setName);
+      await questionProvider.updateQuestionForUser(editedQuestion, setName);
 
       setState(() {
         questions[index] = editedQuestion;
@@ -152,14 +143,11 @@ class _QuestionListContentState extends State<QuestionListContent> {
   }
 
   Future<void> deleteQuestion(int index) async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final userEmail = authProvider.userEmail!;
     final questionProvider =
         Provider.of<QuestionProvider>(context, listen: false);
     final questionToDelete = questions[index];
 
-    await questionProvider.deleteQuestionForUser(
-        questionToDelete, userEmail, setName);
+    await questionProvider.deleteQuestionForUser(questionToDelete, setName);
 
     setState(() {
       questions.removeAt(index);
