@@ -26,9 +26,11 @@ class _QuestionListContentState extends State<QuestionListContent> {
   }
 
   Future<void> _fetchQuestionsFromFirestore() async {
-    final userEmail = Provider.of<AuthProvider>(context, listen: false).userEmail;
+    final userEmail =
+        Provider.of<AuthProvider>(context, listen: false).userEmail;
     final provider = Provider.of<QuestionProvider>(context, listen: false);
-    final fetchedQuestions = await provider.readQuestionsForUser(userEmail!, setName);
+    final fetchedQuestions =
+        await provider.readQuestionsForUser(userEmail!, setName);
     setState(() {
       questions = fetchedQuestions;
     });
@@ -39,8 +41,8 @@ class _QuestionListContentState extends State<QuestionListContent> {
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          const SliverAppBar.large(
-            title: Text('Question List'),
+          SliverAppBar.large(
+            title: Text(setName),
           ),
         ],
         body: ListView.builder(
@@ -54,7 +56,8 @@ class _QuestionListContentState extends State<QuestionListContent> {
                   builder: (BuildContext context) {
                     return AlertDialog(
                       title: const Text('Delete Question'),
-                      content: const Text('Are you sure you want to delete this question?'),
+                      content: const Text(
+                          'Are you sure you want to delete this question?'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
@@ -85,7 +88,8 @@ class _QuestionListContentState extends State<QuestionListContent> {
                 child: const Icon(Icons.delete, color: Colors.white),
               ),
               child: Card.outlined(
-                margin: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
+                margin:
+                    const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(10),
                   onTap: () => editQuestion(index),
@@ -112,7 +116,9 @@ class _QuestionListContentState extends State<QuestionListContent> {
     if (newQuestion != null) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       var username = '${authProvider.userEmail}';
-      final updatedQuestion = await Provider.of<QuestionProvider>(context, listen: false).createQuestionForUser(newQuestion, username, setName);
+      final updatedQuestion =
+          await Provider.of<QuestionProvider>(context, listen: false)
+              .createQuestionForUser(newQuestion, username, setName);
 
       setState(() {
         print(updatedQuestion.id);
@@ -133,9 +139,11 @@ class _QuestionListContentState extends State<QuestionListContent> {
     if (editedQuestion != null) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final userEmail = authProvider.userEmail!;
-      final questionProvider = Provider.of<QuestionProvider>(context, listen: false);
+      final questionProvider =
+          Provider.of<QuestionProvider>(context, listen: false);
       editedQuestion.id = questions[index].id;
-      await questionProvider.updateQuestionForUser(editedQuestion, userEmail, setName);
+      await questionProvider.updateQuestionForUser(
+          editedQuestion, userEmail, setName);
 
       setState(() {
         questions[index] = editedQuestion;
@@ -146,10 +154,12 @@ class _QuestionListContentState extends State<QuestionListContent> {
   Future<void> deleteQuestion(int index) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final userEmail = authProvider.userEmail!;
-    final questionProvider = Provider.of<QuestionProvider>(context, listen: false);
+    final questionProvider =
+        Provider.of<QuestionProvider>(context, listen: false);
     final questionToDelete = questions[index];
 
-    await questionProvider.deleteQuestionForUser(questionToDelete, userEmail, setName);
+    await questionProvider.deleteQuestionForUser(
+        questionToDelete, userEmail, setName);
 
     setState(() {
       questions.removeAt(index);

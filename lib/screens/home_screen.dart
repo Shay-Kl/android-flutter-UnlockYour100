@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:project/screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'set_list_screen.dart';
-import 'TODO screens/stats_screen.dart';
-import 'TODO screens/other_screen.dart';
+import 'profile_screen.dart';
+import 'quiz_screen.dart';
 import '../providers/auth_provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -69,19 +69,19 @@ class _HomeScreenState extends State<HomeScreen> {
           animationDuration: const Duration(milliseconds: 300),
           destinations: const [
             NavigationDestination(
+              icon: Icon(Icons.question_mark_outlined),
+              selectedIcon: Icon(Icons.question_mark),
+              label: 'Quiz',
+            ),
+            NavigationDestination(
               icon: Icon(Icons.list_outlined),
               selectedIcon: Icon(Icons.list),
               label: 'Sets',
             ),
             NavigationDestination(
-              icon: Icon(Icons.bar_chart_outlined),
-              selectedIcon: Icon(Icons.bar_chart),
-              label: 'Stats',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.more_horiz_outlined),
-              selectedIcon: Icon(Icons.more_horiz),
-              label: 'Other',
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: 'Profile',
             ),
           ],
         ),
@@ -106,11 +106,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _getPage(int index) {
     switch (index) {
       case 0:
-        return const QuestionSetListContent();
+        return const QuizScreen();
       case 1:
-        return const StatsContent();
+        return const QuestionSetListContent();
       case 2:
-        return const OtherContent();
+        return const StatsContent();
       default:
         return Container();
     }

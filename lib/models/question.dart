@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Question {
@@ -15,6 +17,12 @@ class Question {
     required this.correctAnswer,
     required this.wrongAnswers,
   });
+  
+  List<String> getShuffledAnswers() {
+    final allAnswers = [correctAnswer, ...wrongAnswers];
+    allAnswers.shuffle(Random()); // Shuffle the list
+    return allAnswers;
+  }
 
   Map<String, dynamic> toMap() {
     return {
