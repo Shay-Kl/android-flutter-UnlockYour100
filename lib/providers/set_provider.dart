@@ -14,6 +14,7 @@ class SetProvider extends ChangeNotifier {
   Future<void> createSet(String name) async {
     await _setCollection.doc(name).set({
       'isActive': true,
+      'setName': name,
     });
     notifyListeners();
   }
