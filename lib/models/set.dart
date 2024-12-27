@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'question.dart';
 
+// TODO: add togel for active/inactive
+
 class QuestionSet {
   final String setName;
-  final bool isActive;
+  bool isActive;
   final List<Question> questions;
 
   QuestionSet({

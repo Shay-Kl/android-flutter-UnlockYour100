@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project/models/set.dart';
 import 'package:project/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../providers/question_provider.dart';
@@ -6,7 +7,8 @@ import 'question_editor_screen.dart';
 import '../models/question.dart';
 
 class QuestionListContent extends StatefulWidget {
-  const QuestionListContent({super.key});
+  final QuestionSet s;
+  const QuestionListContent(this.s, {super.key});
 
   @override
   State<QuestionListContent> createState() => _QuestionListContentState();
@@ -14,10 +16,11 @@ class QuestionListContent extends StatefulWidget {
 
 class _QuestionListContentState extends State<QuestionListContent> {
   List<Question> questions = [];
-  static const setName = 'default';
+  late String setName;
 
   @override
   void initState() {
+    setName = widget.s.setName;
     super.initState();
     _fetchQuestionsFromFirestore();
   }

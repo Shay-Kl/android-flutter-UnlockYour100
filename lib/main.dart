@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project/providers/question_provider.dart';
+import 'package:project/providers/set_provider.dart';
 import 'screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -38,6 +39,8 @@ class MyNotifierApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (context) => QuestionProvider()),
+        // add set provider
+        ChangeNotifierProvider(create: (context) => SetProvider()),
       ],
       child: const MaterialApp(
         home: MyApp(),
