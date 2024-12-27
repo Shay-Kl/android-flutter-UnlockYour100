@@ -108,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         return const QuizScreen();
       case 1:
-        return const QuestionSetListContent();
+        return const SetListScreen();
       case 2:
         return const StatsContent();
       default:
