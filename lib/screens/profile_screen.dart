@@ -11,7 +11,10 @@ class StatsContent extends StatefulWidget {
 }
 
 class _StatsContentState extends State<StatsContent> {
-  String _selectedGiminiModel = 'gemini-1.5-flash';
+  static const String FLASH_MODEL = 'gemini-1.5-flash';
+  static const String PRO_MODEL = 'gemini-1.5-pro';
+  static const String EXP_MODEL = 'gemini-2.0-flash-exp';
+  String _selectedGiminiModel = 'gemini-1.5-pro';
 
   @override
   void initState() {
@@ -77,32 +80,48 @@ class _StatsContentState extends State<StatsContent> {
                     const SizedBox(height: 10),
                     RadioListTile<String>(
                       title: const Text(
-                        'gemini-1.5-flash',
+                        FLASH_MODEL,
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                       ),
                       subtitle: const Text('Stable and recommended for most use cases'),
-                      value: 'gemini-1.5-flash',
+                      value: FLASH_MODEL,
                       groupValue: _selectedGiminiModel,
                       activeColor: Colors.blueAccent,
                       onChanged: (value) {
                         setState(() {
-                          _selectedGiminiModel = value ?? 'gemini-1.5-flash';
+                          _selectedGiminiModel = value ?? FLASH_MODEL;
                           SettingsManager.instance.update(authProvider.userEmail ?? '', 'model', _selectedGiminiModel);
                         });
                       },
                     ),
                     RadioListTile<String>(
                       title: const Text(
-                        'gemini pro',
+                        PRO_MODEL,
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                       ),
-                      subtitle: const Text('Includes experimental features'),
-                      value: 'gemini pro',
+                      subtitle: const Text('more powerful features'),
+                      value: PRO_MODEL,
                       groupValue: _selectedGiminiModel,
                       activeColor: Colors.blueAccent,
                       onChanged: (value) {
                         setState(() {
-                          _selectedGiminiModel = value ?? 'gemini pro';
+                          _selectedGiminiModel = value ?? PRO_MODEL;
+                          SettingsManager.instance.update(authProvider.userEmail ?? '', 'model', _selectedGiminiModel);
+                        });
+                      },
+                    ),
+                    RadioListTile<String>(
+                      title: const Text(
+                        EXP_MODEL,
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
+                      subtitle: const Text('Experimental and cutting-edge features'),
+                      value: EXP_MODEL,
+                      groupValue: _selectedGiminiModel,
+                      activeColor: Colors.blueAccent,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedGiminiModel = value ?? EXP_MODEL;
                           SettingsManager.instance.update(authProvider.userEmail ?? '', 'model', _selectedGiminiModel);
                         });
                       },
