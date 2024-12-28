@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:firebase_vertexai/firebase_vertexai.dart';
+import 'package:project/models/question.dart';
 import '../screens/question_generator_screen.dart';
-
 
 const modelName = 'gemini-1.5-flash'; // Move to settings singleton eventually
 
@@ -18,7 +18,8 @@ class AnswerGenerator {
       ),
     },
   );
-  static final GenerativeModel model = FirebaseVertexAI.instance.generativeModel(
+  static final GenerativeModel model =
+      FirebaseVertexAI.instance.generativeModel(
     model: modelName,
     systemInstruction: systemInstruction,
     generationConfig: GenerationConfig(
@@ -42,14 +43,15 @@ class QuestionGenerator {
         items: Schema.object(
           properties: {
             'question': Schema.string(),
-            'correct_answer': Schema.string(),
-            'wrong_answers': Schema.array(items: Schema.string()),
+            'correctAnswer': Schema.string(),
+            'wrongAnswers': Schema.array(items: Schema.string()),
           },
         ),
       ),
     },
   );
-  static final GenerativeModel model = FirebaseVertexAI.instance.generativeModel(
+  static final GenerativeModel model =
+      FirebaseVertexAI.instance.generativeModel(
     model: modelName,
     systemInstruction: systemInstruction,
     generationConfig: GenerationConfig(
@@ -58,13 +60,16 @@ class QuestionGenerator {
     ),
   );
 
-  static generate(String courseMaterial, String questionFormat, int questionCount, Difficulty difficulty) async {
-    final response = await model.generateContent(
-      [
-        Content.text('Topic: $courseMaterial\n Format: $questionFormat\n Difficulty: ${difficulty.toString()}\n Question Count: $questionCount'), 
-      ],
-    );
-    print(response.text);
-    return jsonDecode(response.text!)['questions'];
+  static Future<List<Question>> generate(String courseMaterial,
+      String questionFormat, int questionCount, Difficulty difficulty) async {
+    String prompt =
+        'Topic: $courseMaterial\n Format: $questionFormat\n Difficulty: ${difficulty.toString()}\n Question Count: $questionCount';
+    final response = await model.generateContent([
+      Content.text(prompt),
+    ]);
+    List<dynamic> questions = jsonDecode(response.text!)['questions'];
+    return questions
+        .map<Question>((question) => Question.fromMap(question))
+        .toList();
   }
 }

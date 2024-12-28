@@ -1,6 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:project/models/question.dart';
 import '../utils/llm_service.dart';
 
 enum SourceType { text, file }
@@ -27,6 +27,10 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
   PlatformFile? _materialFile;
   PlatformFile? _styleFile;
   bool loading = false;
+
+  // -------------------------------------------------------------------------
+  // Build Functions
+  // -------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -218,6 +222,10 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
     );
   }
 
+  // -------------------------------------------------------------------------
+  // User Input Handlers
+  // -------------------------------------------------------------------------
+
   Future<void> _handleFileUpload({required bool isMaterial}) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -232,22 +240,22 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
         }
       });
     }
-
   }
 
-   void _handleGenerate () async {
+  void _handleGenerate() async {
     setState(() {
       loading = true;
     });
-    final questions = await QuestionGenerator.generate(
+    final List<Question> questions = await QuestionGenerator.generate(
       _materialTextController.text,
       _styleTextController.text,
       _selectedQuestionCount,
       _selectedDifficulty,
     );
     loading = false;
-    Navigator.pop(context, questions);
 
+    if (!mounted) return; // Avoid exiting if the user pressed back while waiting for the response
+    Navigator.pop(context, questions);
   }
 
   @override

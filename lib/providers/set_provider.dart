@@ -6,10 +6,13 @@ import '../models/question.dart';
 class SetProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String userEmail;
-  CollectionReference<Map<String, dynamic>> get _setCollection =>
-      _firestore.collection('users').doc(userEmail).collection('sets');
+  late CollectionReference<Map<String, dynamic>>  _setCollection;
 
-  SetProvider(this.userEmail);
+  SetProvider(this.userEmail){
+    if (!userEmail.isEmpty) {
+     _setCollection = _firestore.collection('users').doc(userEmail).collection('sets');
+    }
+  }
 
   Future<void> createSet(String name) async {
     await _setCollection.doc(name).set({
