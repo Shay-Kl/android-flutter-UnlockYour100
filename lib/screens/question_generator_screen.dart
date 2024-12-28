@@ -84,8 +84,9 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
                 textController: _styleTextController,
                 textHint:
                     "Describe the format of questions you want to generate",
-                fileButtonText: 'Upload Course Questions',
+                fileButtonText: 'Upload Example Questions',
                 selectedFile: _styleFile),
+                
           ],
         ),
       ),
@@ -230,6 +231,7 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
+      withData: true,
     );
     if (result != null) {
       setState(() {
@@ -246,15 +248,41 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
     setState(() {
       loading = true;
     });
-    final List<Question> questions = await QuestionGenerator.generate(
-      _materialTextController.text,
-      _styleTextController.text,
-      _selectedQuestionCount,
-      _selectedDifficulty,
-    );
+    late List<Question> questions;
+    if (_materialSourceType == SourceType.file) {
+      if (_materialFile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please upload a course material file')),
+        );
+        loading = false;
+        return;
+      }
+      questions = await QuestionGenerator.generateWithFile(
+        _materialFile!,
+        _styleTextController.text,
+        _selectedQuestionCount,
+        _selectedDifficulty,
+      );
+    } else {
+      if (_materialTextController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a course material')),
+        );
+        loading = false;
+        return;
+      }
+
+      questions = await QuestionGenerator.generate(
+        _materialTextController.text,
+        _styleTextController.text,
+        _selectedQuestionCount,
+        _selectedDifficulty,
+      );
+    }
     loading = false;
 
-    if (!mounted) return; // Avoid exiting if the user pressed back while waiting for the response
+    if (!mounted)
+      return; // Avoid exiting if the user pressed back while waiting for the response
     Navigator.pop(context, questions);
   }
 

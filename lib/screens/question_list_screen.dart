@@ -57,6 +57,7 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
       ),
       floatingActionButton: SpeedDial(
         icon: Icons.add,
+        activeIcon: Icons.close,
         children: [
           SpeedDialChild(
             child: const Icon(Icons.edit),
@@ -168,14 +169,13 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
   }
 
   void _handleGenerateQuestions() async {
-    final newJsonQuestions = await Navigator.push(
+    final newQuestions = await Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) => const QuestionGeneratorScreen()));
-    if (newJsonQuestions == null) return;
+    if (newQuestions == null) return;
     final questions = await questionsFuture;
-    for (final jsonQuestion in newJsonQuestions) {
-      Question question = Question.fromMap(jsonQuestion);
+    for (final question in newQuestions) {
       final updatedQuestion =
           await _questionProvider.createQuestionForUser(question, setName);
       setState(() {
