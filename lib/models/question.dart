@@ -17,6 +17,8 @@ class Question {
     required this.correctAnswer,
     required this.wrongAnswers,
   });
+
+  Question.empty() : this(question: '', correctAnswer: '', wrongAnswers: []);
   
   List<String> getShuffledAnswers() {
     final allAnswers = [correctAnswer, ...wrongAnswers];

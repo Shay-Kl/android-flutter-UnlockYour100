@@ -1,36 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:project/models/set.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import '../providers/question_provider.dart';
 import 'question_editor_screen.dart';
+import 'question_generator_screen.dart';
 import '../models/question.dart';
+// ignore_for_file: use_build_context_synchronously
 
-class QuestionListContent extends StatefulWidget {
-  final QuestionSet s;
-  const QuestionListContent(this.s, {super.key});
+class QuestionListScreen extends StatefulWidget {
+  final String setName;
+  const QuestionListScreen(this.setName, {super.key});
 
   @override
-  State<QuestionListContent> createState() => _QuestionListContentState();
+  State<QuestionListScreen> createState() => _QuestionListScreenState();
 }
 
-class _QuestionListContentState extends State<QuestionListContent> {
-  List<Question> questions = [];
+class _QuestionListScreenState extends State<QuestionListScreen> {
+  late Future<List<Question>> questionsFuture;
   late String setName;
 
   @override
   void initState() {
-    setName = widget.s.setName;
     super.initState();
-    _fetchQuestionsFromFirestore();
+    setName = widget.setName;
+    final questionProvider =
+        Provider.of<QuestionProvider>(context, listen: false);
+    questionsFuture = questionProvider.readQuestionsForUser(setName);
   }
 
-  Future<void> _fetchQuestionsFromFirestore() async {
-    final provider = Provider.of<QuestionProvider>(context, listen: false);
-    final fetchedQuestions = await provider.readQuestionsForUser(setName);
-    setState(() {
-      questions = fetchedQuestions;
-    });
-  }
+  // -------------------------------------------------------------------------
+  // Build Functions
+  // -------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -41,99 +41,120 @@ class _QuestionListContentState extends State<QuestionListContent> {
             title: Text(setName),
           ),
         ],
-        body: ListView.builder(
-          itemCount: questions.length,
-          itemBuilder: (context, index) {
-            return Dismissible(
-              key: ValueKey('${index}_${questions[index].question}'),
-              confirmDismiss: (direction) async {
-                return await showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Delete Question'),
-                      content: const Text(
-                          'Are you sure you want to delete this question?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text('Delete'),
-                        ),
-                      ],
-                    );
-                  },
+        body: FutureBuilder(
+            future: questionsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else {
+                return _buildQuestionList(
+                  questions: snapshot.data as List<Question>,
                 );
-              },
-              onDismissed: (direction) {
-                deleteQuestion(index);
-              },
-              background: Container(
-                color: Colors.red,
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: const Icon(Icons.delete, color: Colors.white),
-              ),
-              secondaryBackground: Container(
-                color: Colors.red,
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: const Icon(Icons.delete, color: Colors.white),
-              ),
-              child: Card.outlined(
-                margin:
-                    const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(10),
-                  onTap: () => editQuestion(index),
-                  child: QuestionCardContents(q: questions[index]),
-                ),
-              ),
-            );
-          },
-        ),
+              }
+            }),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: createQuestion,
-        child: const Icon(Icons.add),
+      floatingActionButton: SpeedDial(
+        icon: Icons.add,
+        activeIcon: Icons.close,
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.edit),
+            label: 'Create manually',
+            onTap: _handleCreateQuestion,
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.auto_awesome),
+            label: 'Generate with AI',
+            onTap: _handleGenerateQuestions,
+          ),
+        ],
       ),
     );
   }
 
-  void createQuestion() async {
+  Widget _buildQuestionList({required List<Question> questions}) {
+    return ListView.builder(
+      itemCount: questions.length,
+      itemBuilder: (context, index) {
+        return Dismissible(
+          key: ValueKey('${index}_${questions[index].question}'),
+          onDismissed: (direction) {
+            _handleDeleteQuestion(index);
+          },
+          background: Container(
+            color: Colors.red.shade400,
+          ),
+          child: Card.outlined(
+            margin: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () => _handleEditQuestion(index),
+              child: ListTile(
+                title: Text(questions[index].question),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: questions[index]
+                      .answers
+                      .asMap()
+                      .entries
+                      .map<Widget>((entry) {
+                    final answer = entry.value;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Text('- $answer'),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // User Input Handlers
+  // -------------------------------------------------------------------------
+
+  void _handleCreateQuestion() async {
     final newQuestion = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => QuestionEditorContent()),
+      MaterialPageRoute(
+          builder: (context) =>
+              QuestionEditorScreen(question: Question.empty())),
     );
 
     if (newQuestion != null) {
+      final questionProvider =
+          Provider.of<QuestionProvider>(context, listen: false);
       final updatedQuestion =
-          await Provider.of<QuestionProvider>(context, listen: false)
-              .createQuestionForUser(newQuestion, setName);
-
+          await questionProvider.createQuestionForUser(newQuestion, setName);
+      final questions = await questionsFuture;
       setState(() {
-        print(updatedQuestion.id);
         questions.add(updatedQuestion);
       });
     }
   }
 
-  void editQuestion(int index) async {
+  void _handleEditQuestion(int index) async {
+    final List<Question> questions = await questionsFuture;
+    final question = questions[index];
     final editedQuestion = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => QuestionEditorContent.edit(
-          question: questions[index],
+        builder: (context) => QuestionEditorScreen(
+          question: question,
         ),
       ),
     );
+
     if (editedQuestion != null) {
+      editedQuestion.id = question.id;
       final questionProvider =
           Provider.of<QuestionProvider>(context, listen: false);
-      editedQuestion.id = questions[index].id;
       await questionProvider.updateQuestionForUser(editedQuestion, setName);
 
       setState(() {
@@ -142,37 +163,33 @@ class _QuestionListContentState extends State<QuestionListContent> {
     }
   }
 
-  Future<void> deleteQuestion(int index) async {
+  void _handleDeleteQuestion(int index) async {
+    List<Question> questions = await questionsFuture;
     final questionProvider =
         Provider.of<QuestionProvider>(context, listen: false);
-    final questionToDelete = questions[index];
 
-    await questionProvider.deleteQuestionForUser(questionToDelete, setName);
+    await questionProvider.deleteQuestionForUser(questions[index], setName);
 
     setState(() {
       questions.removeAt(index);
     });
   }
-}
 
-class QuestionCardContents extends StatelessWidget {
-  final Question q;
-  const QuestionCardContents({super.key, required this.q});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(q.question),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: q.answers.asMap().entries.map<Widget>((entry) {
-          final answer = entry.value;
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 3),
-            child: Text('- $answer'),
-          );
-        }).toList(),
-      ),
-    );
+  void _handleGenerateQuestions() async {
+    final newQuestions = await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => const QuestionGeneratorScreen()));
+    if (newQuestions == null) return;
+    final questions = await questionsFuture;
+    final questionProvider =
+        Provider.of<QuestionProvider>(context, listen: false);
+    for (final question in newQuestions) {
+      final updatedQuestion =
+          await questionProvider.createQuestionForUser(question, setName);
+      setState(() {
+        questions.add(updatedQuestion);
+      });
+    }
   }
 }

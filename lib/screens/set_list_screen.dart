@@ -13,12 +13,13 @@ class SetListScreen extends StatefulWidget {
 
 class _SetListScreenState extends State<SetListScreen> {
   late Future<List<QuestionSet>> questionSets;
-  get setProvider => Provider.of<SetProvider>(context, listen: false);
+  late final SetProvider _setProvider;
   
   @override
   void initState() {
     super.initState();
-    questionSets = setProvider.readSetsForUser();
+    _setProvider = Provider.of<SetProvider>(context, listen: false);
+    questionSets = _setProvider.readSetsForUser();
   }
 
   void _showNewSetDialog() {
@@ -51,7 +52,7 @@ class _SetListScreenState extends State<SetListScreen> {
                     questionSets.then((sets) {
                       sets.add(newSet);
                     });
-                    setProvider.createSet(newName);
+                    _setProvider.createSet(newName);
                   });
                 }
                 Navigator.pop(context); // Close the dialog
@@ -151,7 +152,7 @@ class SetCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => QuestionListContent(s),
+              builder: (context) => QuestionListScreen(s.setName),
             ),
           );
         },
