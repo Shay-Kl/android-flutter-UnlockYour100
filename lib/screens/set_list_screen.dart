@@ -152,7 +152,7 @@ class SetCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => QuestionListContent(s.setName),
+              builder: (context) => QuestionListScreen(s.setName),
             ),
           );
         },

@@ -3,47 +3,47 @@ import 'dart:math';
 import 'package:project/models/question.dart';
 import 'package:project/utils/llm_service.dart';
 
+// Define the minimum and maximum number of answers
 const minAnswerCount = 2;
 const maxAnswerCount = 5;
 final answerCounts = List.generate(
     maxAnswerCount - minAnswerCount + 1, (i) => i + minAnswerCount);
 
-class QuestionEditorContent extends StatefulWidget {
-  QuestionEditorContent({super.key})
-      : question = Question(question: "", correctAnswer: "", wrongAnswers: []);
-  const QuestionEditorContent.edit({super.key, required this.question});
+class QuestionEditorScreen extends StatefulWidget {
   final Question question;
+  const QuestionEditorScreen({super.key, required this.question});
+
   @override
-  State<QuestionEditorContent> createState() =>
-      _QuestionEditorContentState(question);
+  State<QuestionEditorScreen> createState() => _QuestionEditorScreenState();
 }
 
-class _QuestionEditorContentState extends State<QuestionEditorContent> {
+class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
   final FocusNode _questionFocus = FocusNode();
   final TextEditingController _questionController = TextEditingController();
   final List<TextEditingController> _answerControllers =
       List.generate(maxAnswerCount, (_) => TextEditingController());
   final _formKey = GlobalKey<FormState>();
-  int _selectedAnswerCount;
+  
+  late int _selectedAnswerCount;
   bool loading = false;
   bool questionFilled = false;
-
-  _QuestionEditorContentState(Question question)
-      : _selectedAnswerCount = max(question.answers.length, minAnswerCount) {
-    _questionController.text = question.question;
-    for (int i = 0; i < question.answers.length; i++) {
-      _answerControllers[i].text = question.answers[i];
-    }
-  }
 
   @override
   void initState() {
     super.initState();
-    _questionFocus.requestFocus();
-    _questionController.addListener(_updateButtonStates);
-    for (var controller in _answerControllers) {
-      controller.addListener(_updateButtonStates);
+    Question question = widget.question;
+    _selectedAnswerCount = max(question.answers.length, minAnswerCount);
+
+    for (int i = 0; i < question.answers.length; i++) {
+      _answerControllers[i].text = question.answers[i];
     }
+    _questionController.text = question.question;
+    _questionFocus.requestFocus();
+    _questionController.addListener(() {
+      setState(() {
+        questionFilled = _questionController.text.isNotEmpty;
+      });
+    });
   }
 
   @override
@@ -56,11 +56,9 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
     super.dispose();
   }
 
-  void _updateButtonStates() {
-    setState(() {
-      questionFilled = _questionController.text.isNotEmpty;
-    });
-  }
+  // -------------------------------------------------------------------------
+  // Build Functions
+  // -------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +100,6 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
           suffixIcon: IconButton(
               onPressed: () {
                 _questionController.clear();
-                _updateButtonStates();
               },
               icon: const Icon(Icons.clear)),
           labelText: 'Question',
@@ -134,7 +131,6 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
               setState(() {
                 _selectedAnswerCount = newSelection.first;
               });
-              _updateButtonStates();
             },
             showSelectedIcon: true,
           ),
@@ -156,7 +152,6 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
                 suffixIcon: IconButton(
                     onPressed: () {
                       _answerControllers[index].clear();
-                      _updateButtonStates();
                     },
                     icon: const Icon(Icons.clear)),
                 border: const OutlineInputBorder(),
@@ -175,14 +170,19 @@ class _QuestionEditorContentState extends State<QuestionEditorContent> {
     ];
   }
 
+  // -------------------------------------------------------------------------
+  // User Input Handlers
+  // -------------------------------------------------------------------------
+
   void _handleGeneratePress() async {
     setState(() {
       loading = true;
     });
-    final answers = await AnswerGenerator.generate(_questionController.text);
-    _answerControllers[0].text = answers['correct_answer'] ?? '';
+    final Map<String, dynamic> answers =
+        await AnswerGenerator.generate(_questionController.text);
+    _answerControllers[0].text = answers['correctAnswer'] ?? '';
     for (int i = 1; i < maxAnswerCount; i++) {
-      _answerControllers[i].text = answers['wrong_answers']?[i - 1] ?? '';
+      _answerControllers[i].text = answers['wrongAnswers']?[i - 1] ?? '';
     }
     setState(() {
       loading = false;

@@ -12,8 +12,8 @@ class AnswerGenerator {
     properties: {
       'answers': Schema.object(
         properties: {
-          'correct_answer': Schema.string(),
-          'wrong_answers': Schema.array(items: Schema.string()),
+          'correctAnswer': Schema.string(),
+          'wrongAnswers': Schema.array(items: Schema.string()),
         },
       ),
     },
@@ -28,7 +28,7 @@ class AnswerGenerator {
     ),
   );
 
-  static generate(String question) async {
+  static Future<Map<String,dynamic>> generate(String question) async {
     final response = await model.generateContent([Content.text(question)]);
     return jsonDecode(response.text!)['answers'];
   }

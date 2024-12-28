@@ -7,15 +7,15 @@ import 'question_generator_screen.dart';
 import '../models/question.dart';
 // ignore_for_file: use_build_context_synchronously
 
-class QuestionListContent extends StatefulWidget {
+class QuestionListScreen extends StatefulWidget {
   final String setName;
-  const QuestionListContent(this.setName, {super.key});
+  const QuestionListScreen(this.setName, {super.key});
 
   @override
-  State<QuestionListContent> createState() => _QuestionListContentState();
+  State<QuestionListScreen> createState() => _QuestionListScreenState();
 }
 
-class _QuestionListContentState extends State<QuestionListContent> {
+class _QuestionListScreenState extends State<QuestionListScreen> {
   late Future<List<Question>> questionsFuture;
   late String setName;
   late final QuestionProvider _questionProvider;
@@ -121,7 +121,9 @@ class _QuestionListContentState extends State<QuestionListContent> {
   void _handleCreateQuestion() async {
     final newQuestion = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => QuestionEditorContent()),
+      MaterialPageRoute(
+          builder: (context) =>
+              QuestionEditorScreen(question: Question.empty())),
     );
 
     if (newQuestion != null) {
@@ -140,7 +142,7 @@ class _QuestionListContentState extends State<QuestionListContent> {
     final editedQuestion = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => QuestionEditorContent.edit(
+        builder: (context) => QuestionEditorScreen(
           question: question,
         ),
       ),
