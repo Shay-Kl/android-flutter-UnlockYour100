@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_vertexai/firebase_vertexai.dart';
 import 'package:project/models/question.dart';
+import 'package:project/utils/settings_manager.dart';
 import '../screens/question_generator_screen.dart';
 
-const modelName = 'gemini-1.5-flash'; // Move to settings singleton eventually
 
 class AnswerGenerator {
   static final systemInstruction = Content.system(
@@ -22,7 +22,7 @@ class AnswerGenerator {
   );
   static final GenerativeModel model =
       FirebaseVertexAI.instance.generativeModel(
-    model: modelName,
+    model: SettingsManager.instance.prefs['model'],
     systemInstruction: systemInstruction,
     generationConfig: GenerationConfig(
       responseMimeType: 'application/json',
@@ -54,7 +54,7 @@ class QuestionGenerator {
   );
   static final GenerativeModel model =
       FirebaseVertexAI.instance.generativeModel(
-    model: modelName,
+    model: SettingsManager.instance.prefs['model'],
     systemInstruction: systemInstruction,
     generationConfig: GenerationConfig(
       responseMimeType: 'application/json',

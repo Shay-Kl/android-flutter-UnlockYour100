@@ -23,7 +23,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
   final List<TextEditingController> _answerControllers =
       List.generate(maxAnswerCount, (_) => TextEditingController());
   final _formKey = GlobalKey<FormState>();
-  
+
   late int _selectedAnswerCount;
   bool loading = false;
   bool questionFilled = false;
@@ -184,6 +184,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
     for (int i = 1; i < maxAnswerCount; i++) {
       _answerControllers[i].text = answers['wrongAnswers']?[i - 1] ?? '';
     }
+    if (!mounted) return;
     setState(() {
       loading = false;
     });
