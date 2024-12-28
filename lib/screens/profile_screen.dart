@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import '../utils/model_manager.dart';
+import '../utils/settings_manager.dart';
 
 class StatsContent extends StatefulWidget {
   const StatsContent({super.key});
@@ -17,9 +17,9 @@ class _StatsContentState extends State<StatsContent> {
   void initState() {
     super.initState();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    ModelManager.instance.loadModel(authProvider.userEmail ?? '').then((_) {
+    SettingsManager.instance.load(authProvider.userEmail ?? '').then((_) {
       setState(() {
-        _selectedGiminiModel = ModelManager.instance.selectedModel;
+        _selectedGiminiModel = SettingsManager.instance.prefs['model'];
       });
     });
   }
@@ -87,7 +87,7 @@ class _StatsContentState extends State<StatsContent> {
                       onChanged: (value) {
                         setState(() {
                           _selectedGiminiModel = value ?? 'gemini-1.5-flash';
-                          ModelManager.instance.updateModel(authProvider.userEmail ?? '', _selectedGiminiModel);
+                          SettingsManager.instance.update(authProvider.userEmail ?? '', 'model', _selectedGiminiModel);
                         });
                       },
                     ),
@@ -103,7 +103,7 @@ class _StatsContentState extends State<StatsContent> {
                       onChanged: (value) {
                         setState(() {
                           _selectedGiminiModel = value ?? 'gemini pro';
-                          ModelManager.instance.updateModel(authProvider.userEmail ?? '', _selectedGiminiModel);
+                          SettingsManager.instance.update(authProvider.userEmail ?? '', 'model', _selectedGiminiModel);
                         });
                       },
                     ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+// import settings manager
+import '../utils/settings_manager.dart';
 
 class AuthProvider extends ChangeNotifier {
   GoogleSignInAccount? _currentUser;
@@ -20,6 +22,8 @@ class AuthProvider extends ChangeNotifier {
 
   void setUser(GoogleSignInAccount? user) {
     _currentUser = user;
+    // call settings manager to load user settings
+    SettingsManager.instance.load(user?.email ?? '');
     notifyListeners();
   }
 
