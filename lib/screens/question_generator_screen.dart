@@ -3,8 +3,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:project/models/question.dart';
 import '../utils/llm_service.dart';
 
-enum SourceType { text, file }
+const int maxFileSize = 10 * 1024 * 1024;
 
+enum SourceType { text, file }
 enum Difficulty { trivial, moderate, challenging }
 
 class QuestionGeneratorScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class QuestionGeneratorScreen extends StatefulWidget {
 }
 
 class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
+  final _formKey = GlobalKey<FormState>();
   int _selectedQuestionCount = 8;
   Difficulty _selectedDifficulty = Difficulty.moderate; // Updated type
   SourceType _materialSourceType = SourceType.file;
@@ -38,56 +40,59 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
       appBar: AppBar(title: const Text('Generate Questions')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Number of Questions:',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            _buildQuestionCountSelector(),
-            const SizedBox(height: 20),
-            Text(
-              'Difficulty:',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            _buildDifficultySelector(),
-            const SizedBox(height: 20),
-            Text(
-              'Question Topic:',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            _buildSourceSelector(
-              selectedType: _materialSourceType,
-              onChanged: (SourceType? value) {
-                if (value != null) setState(() => _materialSourceType = value);
-              },
-              textController: _materialTextController,
-              textHint: 'Describe the topic of questions you want to generate',
-              fileButtonText: 'Upload Course Material',
-              selectedFile: _materialFile,
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Question Style:',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            _buildSourceSelector(
-                selectedType: _styleSourceType,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Number of Questions:',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              _buildQuestionCountSelector(),
+              const SizedBox(height: 20),
+              Text(
+                'Difficulty:',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              _buildDifficultySelector(),
+              const SizedBox(height: 20),
+              Text(
+                'Question Topic:',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              _buildSourceSelector(
+                selectedType: _materialSourceType,
                 onChanged: (SourceType? value) {
-                  if (value != null) setState(() => _styleSourceType = value);
+                  if (value != null) setState(() => _materialSourceType = value);
                 },
-                textController: _styleTextController,
-                textHint:
-                    "Describe the format of questions you want to generate",
-                fileButtonText: 'Upload Example Questions',
-                selectedFile: _styleFile),
-                
-          ],
+                textController: _materialTextController,
+                textHint: 'Describe the topic of questions you want to generate',
+                fileButtonText: 'Upload Course Material',
+                selectedFile: _materialFile,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Question Style:',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              _buildSourceSelector(
+                  selectedType: _styleSourceType,
+                  onChanged: (SourceType? value) {
+                    if (value != null) setState(() => _styleSourceType = value);
+                  },
+                  textController: _styleTextController,
+                  textHint:
+                      "Describe the format of questions you want to generate",
+                  fileButtonText: 'Upload Example Questions',
+                  selectedFile: _styleFile),
+                  
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: Padding(
@@ -133,35 +138,65 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
           ],
         ),
         if (selectedType == SourceType.text)
-          SizedBox(
-            child: TextField(
-              controller: textController,
-              decoration: InputDecoration(
-                hintText: textHint,
-                border: const OutlineInputBorder(),
-              ),
-              maxLines: 3,
+          TextFormField(
+            controller: textController,
+            decoration: InputDecoration(
+              hintText: textHint,
+              border: const OutlineInputBorder(),
             ),
+            maxLines: 3,
+            validator: (value) {
+              if (_materialSourceType == SourceType.text &&
+                  textController == _materialTextController &&
+                  (value == null || value.isEmpty)) {
+                return 'Please enter a course material';
+              }
+              // Remove style text validation - making it optional
+              return null;
+            },
           )
         else
-          Column(
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => _handleFileUpload(
-                  isMaterial: fileButtonText.contains('Material'),
-                ),
-                icon: const Icon(Icons.upload_file),
-                label: Text(fileButtonText),
-              ),
-              if (selectedFile != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    'Selected: ${selectedFile.name}',
-                    style: Theme.of(context).textTheme.bodySmall,
+          FormField<PlatformFile?>(
+            validator: (value) {
+              if (_materialSourceType == SourceType.file &&
+                  fileButtonText.contains('Material') &&
+                  selectedFile == null) {
+                return 'Please upload a course material file (PDF or image)';
+              }
+              // Remove style file validation - making it optional
+              return null;
+            },
+            builder: (field) {
+              return Column(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _handleFileUpload(
+                      isMaterial: fileButtonText.contains('Material'),
+                    ),
+                    icon: const Icon(Icons.upload_file),
+                    label: Text(fileButtonText),
                   ),
-                ),
-            ],
+                  if (selectedFile != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Selected: ${selectedFile.name}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  if (field.hasError)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        field.errorText ?? '',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
       ],
     );
@@ -218,9 +253,9 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
               _selectedDifficulty = newSelection.first;
             });
           },
-        ),
+        
       ),
-    );
+    ));
   }
 
   // -------------------------------------------------------------------------
@@ -230,7 +265,7 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
   Future<void> _handleFileUpload({required bool isMaterial}) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf'],
+      allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
       withData: true,
     );
     if (result != null) {
@@ -245,45 +280,35 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
   }
 
   void _handleGenerate() async {
-    setState(() {
-      loading = true;
-    });
-    late List<Question> questions;
-    if (_materialSourceType == SourceType.file) {
-      if (_materialFile == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please upload a course material file')),
-        );
-        loading = false;
-        return;
-      }
-      questions = await QuestionGenerator.generateWithFile(
-        _materialFile!,
-        _styleTextController.text,
-        _selectedQuestionCount,
-        _selectedDifficulty,
-      );
-    } else {
-      if (_materialTextController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter a course material')),
-        );
-        loading = false;
-        return;
-      }
+    if (!_formKey.currentState!.validate()) return;
 
-      questions = await QuestionGenerator.generate(
-        _materialTextController.text,
-        _styleTextController.text,
-        _selectedQuestionCount,
-        _selectedDifficulty,
+    setState(() => loading = true);
+
+    LLMInput materialInput = _materialSourceType == SourceType.file
+        ? FileInput(_materialFile!)
+        : TextInput(_materialTextController.text);
+
+    // Make style input optional by using null when no style is provided
+    LLMInput styleInput = TextInput(' ');
+    if (_styleSourceType == SourceType.file && _styleFile != null) {
+      styleInput = FileInput(_styleFile!);
+    } else if (_styleSourceType == SourceType.text && _styleTextController.text.isNotEmpty) {
+      styleInput = TextInput(_styleTextController.text);
+    }
+
+    try {
+      final questions = await QuestionGenerator.generate(
+        materialInput, styleInput, _selectedQuestionCount, _selectedDifficulty,
+      );
+      if (!mounted) return;
+      Navigator.pop(context, questions);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error generating questions: $e')),
       );
     }
-    loading = false;
 
-    if (!mounted)
-      return; // Avoid exiting if the user pressed back while waiting for the response
-    Navigator.pop(context, questions);
+    setState(() => loading = false);
   }
 
   @override

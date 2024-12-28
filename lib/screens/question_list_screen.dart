@@ -18,14 +18,14 @@ class QuestionListScreen extends StatefulWidget {
 class _QuestionListScreenState extends State<QuestionListScreen> {
   late Future<List<Question>> questionsFuture;
   late String setName;
-  late final QuestionProvider _questionProvider;
 
   @override
   void initState() {
     super.initState();
     setName = widget.setName;
-    _questionProvider = Provider.of<QuestionProvider>(context, listen: false);
-    questionsFuture = _questionProvider.readQuestionsForUser(setName);
+    final questionProvider =
+        Provider.of<QuestionProvider>(context, listen: false);
+    questionsFuture = questionProvider.readQuestionsForUser(setName);
   }
 
   // -------------------------------------------------------------------------
@@ -128,8 +128,10 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
     );
 
     if (newQuestion != null) {
+      final questionProvider =
+          Provider.of<QuestionProvider>(context, listen: false);
       final updatedQuestion =
-          await _questionProvider.createQuestionForUser(newQuestion, setName);
+          await questionProvider.createQuestionForUser(newQuestion, setName);
       final questions = await questionsFuture;
       setState(() {
         questions.add(updatedQuestion);
@@ -151,7 +153,9 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
 
     if (editedQuestion != null) {
       editedQuestion.id = question.id;
-      await _questionProvider.updateQuestionForUser(editedQuestion, setName);
+      final questionProvider =
+          Provider.of<QuestionProvider>(context, listen: false);
+      await questionProvider.updateQuestionForUser(editedQuestion, setName);
 
       setState(() {
         questions[index] = editedQuestion;
@@ -161,7 +165,10 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
 
   void _handleDeleteQuestion(int index) async {
     List<Question> questions = await questionsFuture;
-    await _questionProvider.deleteQuestionForUser(questions[index], setName);
+    final questionProvider =
+        Provider.of<QuestionProvider>(context, listen: false);
+
+    await questionProvider.deleteQuestionForUser(questions[index], setName);
 
     setState(() {
       questions.removeAt(index);
@@ -175,9 +182,11 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
             builder: (context) => const QuestionGeneratorScreen()));
     if (newQuestions == null) return;
     final questions = await questionsFuture;
+    final questionProvider =
+        Provider.of<QuestionProvider>(context, listen: false);
     for (final question in newQuestions) {
       final updatedQuestion =
-          await _questionProvider.createQuestionForUser(question, setName);
+          await questionProvider.createQuestionForUser(question, setName);
       setState(() {
         questions.add(updatedQuestion);
       });
