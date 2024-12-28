@@ -4,6 +4,15 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthProvider extends ChangeNotifier {
   GoogleSignInAccount? _currentUser;
   GoogleSignInAccount? get currentUser => _currentUser;
+  // image avatar
+  ImageProvider get userImage {
+    if (_currentUser?.photoUrl != null) {
+      return NetworkImage(_currentUser!.photoUrl!);
+    } else {
+      return const AssetImage('assets/images/default_avatar.png');
+    }
+  }
+
   bool get isSignedIn => _currentUser != null;
   String? get userId => _currentUser?.id;
   String? get userName => _currentUser?.displayName;
