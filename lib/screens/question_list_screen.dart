@@ -5,6 +5,7 @@ import '../providers/question_provider.dart';
 import 'question_editor_screen.dart';
 import 'question_generator_screen.dart';
 import '../models/question.dart';
+import '../providers/set_provider.dart';
 // ignore_for_file: use_build_context_synchronously
 
 class QuestionListScreen extends StatefulWidget {
@@ -39,6 +40,12 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar.large(
             title: Text(setName),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.delete),
+                onPressed: () => _showDeleteConfirmationDialog(context, setName),
+              ),
+            ],
           ),
         ],
         body: FutureBuilder(
@@ -192,4 +199,40 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
       });
     }
   }
+  
+  void _showDeleteConfirmationDialog(BuildContext context, String setName) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Set'),
+          content: const Text('Are you sure you want to delete this set?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Cancel deletion
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                // TODO: Decide how to handle deletion
+                // Delete the set
+                //final setProvider = Provider.of<SetProvider>(context, listen: false);
+                //await setProvider.deleteSet(setName);
+                Navigator.pop(context); // Close dialog
+                //Navigator.pop(context); // Pop the current screen
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 }
+
+

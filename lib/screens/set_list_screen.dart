@@ -67,6 +67,7 @@ class _SetListScreenState extends State<SetListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Question Set List Screen'),
@@ -87,8 +88,10 @@ class _SetListScreenState extends State<SetListScreen> {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else {
+            // TODO: add else for when there are no sets
             return ListView(
               children: snapshot.data!.map((s) {
+                // TODO: Check how square cards look
                 return SetCard(s);
               }).toList(),
             );
@@ -112,8 +115,18 @@ class SwitchExample extends StatefulWidget {
 }
 
 class _SwitchExampleState extends State<SwitchExample> {
+
+  //late final SetProvider _setProvider;
+  
+  //@override
+  //void initState() {
+  //  super.initState();
+  //  _setProvider = Provider.of<SetProvider>(context, listen: false);
+  //}
+
   @override
   Widget build(BuildContext context) {
+    final SetProvider setProvider = Provider.of<SetProvider>(context);
     return Switch(
       // This bool value toggles the switch.
       value: widget.s.isActive,
@@ -121,7 +134,7 @@ class _SwitchExampleState extends State<SwitchExample> {
         // This is called when the user toggles the switch.
         setState(() {
           widget.s.isActive = !widget.s.isActive;
-          // TODO: Update the isActive field in Firestore
+          setProvider.updateSetIsActive(widget.s.setName, widget.s.isActive);
         });
       },
     );

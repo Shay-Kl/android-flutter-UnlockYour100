@@ -14,6 +14,18 @@ class SetProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updateSetIsActive(String setName, bool isActive) async {
+    try {
+      await _setCollection.doc(setName).update({
+        'isActive': isActive,
+      });
+      // After updating Firestore, notify listeners to reflect the change locally
+      notifyListeners();
+    } catch (e) {
+      print("Error updating isActive: $e");
+    }
+  }
+
   Future<void> createSet(String name) async {
     await _setCollection.doc(name).set({
       'isActive': true,
@@ -42,6 +54,8 @@ class SetProvider extends ChangeNotifier {
     }
     return sets;
   }
+
+
 
   Future<List<String>> getSetNames() async {
     final setsSnapshot = await _setCollection.get();
