@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project/screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/settings_manager.dart';
@@ -32,7 +33,22 @@ class _StatsContentState extends State<StatsContent> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        title: const Text('Profile'),
+        actions: [
+          if (authProvider.isSignedIn)
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                await authProvider.signOut(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              },
+            )
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [

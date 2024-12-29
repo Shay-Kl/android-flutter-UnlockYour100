@@ -34,23 +34,6 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          // print the username in the app bar
-          //title: const Text('Home'),
-          actions: [
-            if (authProvider.isSignedIn)
-              IconButton(
-                icon: const Icon(Icons.logout),
-                onPressed: () async {
-                  await authProvider.signOut(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
-                  );
-                },
-              )
-          ],
-        ),
         body: Stack(
           children: [
             _buildOffstageNavigator(0),
