@@ -26,7 +26,7 @@ class QuestionProvider extends ChangeNotifier {
 
       return q;
     } catch (e) {
-      print('Error creating question for user: $e');
+      debugPrint('Error creating question for user: $e');
       rethrow;
     }
   }
@@ -42,7 +42,7 @@ class QuestionProvider extends ChangeNotifier {
           .get();
       return snapshot.docs.map((doc) => Question.fromDocument(doc)).toList();
     } catch (e) {
-      print('Error reading questions for user: $e');
+      debugPrint('Error reading questions for user: $e');
       return [];
     }
   }
@@ -57,7 +57,7 @@ class QuestionProvider extends ChangeNotifier {
       await questionDoc.update(q.toMap());
       notifyListeners();
     } catch (e) {
-      print('Error updating question for user: $e');
+      debugPrint('Error updating question for user: $e');
     }
   }
 
@@ -71,7 +71,7 @@ class QuestionProvider extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      print('Error deleting question for user: $e');
+      debugPrint('Error deleting question for user: $e');
     }
   }
 }

@@ -5,7 +5,7 @@ import '../providers/question_provider.dart';
 import 'question_editor_screen.dart';
 import 'question_generator_screen.dart';
 import '../models/question.dart';
-import '../providers/set_provider.dart';
+//import '../providers/set_provider.dart';
 // ignore_for_file: use_build_context_synchronously
 
 class QuestionListScreen extends StatefulWidget {
@@ -42,7 +42,7 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
             title: Text(setName),
             actions: [
               IconButton(
-                icon: Icon(Icons.delete),
+                icon: const Icon(Icons.delete),
                 onPressed: () => _showDeleteConfirmationDialog(context, setName),
               ),
             ],
@@ -55,6 +55,17 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
                 return const Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'No questions available. Please create a new one to continue.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16.0), // Optional: Adjust font size for better visibility
+                    ),
+                  ),
+                );
               } else {
                 return _buildQuestionList(
                   questions: snapshot.data as List<Question>,
