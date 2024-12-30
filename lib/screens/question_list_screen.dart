@@ -5,7 +5,7 @@ import '../providers/question_provider.dart';
 import 'question_editor_screen.dart';
 import 'question_generator_screen.dart';
 import '../models/question.dart';
-//import '../providers/set_provider.dart';
+import '../providers/set_provider.dart';
 // ignore_for_file: use_build_context_synchronously
 
 class QuestionListScreen extends StatefulWidget {
@@ -43,7 +43,18 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.delete),
-                onPressed: () => _showDeleteConfirmationDialog(context, setName),
+                onPressed: () async {
+                final bool? result = await _showDeleteConfirmationDialog(context, setName);
+                if (result == true) {
+                  // User confirmed deletion
+                  //final setProvider = Provider.of<SetProvider>(context, listen: false);
+                  //setProvider.deleteSet(setName);
+                  Navigator.pop(context, true);
+                  } else {
+                    // User canceled deletion
+                    debugPrint('Deletion canceled');
+                  }
+                },
               ),
             ],
           ),
@@ -211,37 +222,33 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
     }
   }
   
-  void _showDeleteConfirmationDialog(BuildContext context, String setName) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Set'),
-          content: const Text('Are you sure you want to delete this set?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Cancel deletion
-                Navigator.pop(context);
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                // TODO: Decide how to handle deletion
-                // Delete the set
-                //final setProvider = Provider.of<SetProvider>(context, listen: false);
-                //await setProvider.deleteSet(setName);
-                Navigator.pop(context); // Close dialog
-                //Navigator.pop(context); // Pop the current screen
-              },
-              child: const Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  Future<bool?> _showDeleteConfirmationDialog(BuildContext context, String setName) {
+  return showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Delete Set'),
+        content: const Text('Are you sure you want to delete this set?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Cancel deletion
+              Navigator.pop(context, false); // Return false for cancel
+            },
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              // Confirm deletion
+              Navigator.pop(context, true); // Return true for delete
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
 
 }

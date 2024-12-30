@@ -14,6 +14,7 @@ class SetListScreen extends StatefulWidget {
 class _SetListScreenState extends State<SetListScreen> {
   late Future<List<QuestionSet>> questionSets;
   late final SetProvider _setProvider;
+  //bool setStateChange = false;
   
   @override
   void initState() {
@@ -65,10 +66,27 @@ class _SetListScreenState extends State<SetListScreen> {
     );
   }
 
+  double _calculateSuccessRate(QuestionSet s) {
+    int totalCorrect = 0;
+    int totalAnswers = 0;
+
+    for (var question in s.questions) {
+      totalCorrect += question.correctAnswers;
+      totalAnswers += question.totalAnswers;
+      debugPrint("${question.correctAnswers}/${question.totalAnswers}");
+    }
+
+    return totalAnswers == 0 ? 0.0 : totalCorrect / totalAnswers;
+  }
+
   @override
   Widget build(BuildContext context) {
     debugPrint("set list rebuild");
-    final setProvider = Provider.of<SetProvider>(context);
+    //final setProvider = Provider.of<SetProvider>(context);
+    //if (setStateChange == false){
+    //  questionSets = _setProvider.readSetsForUser();
+    //}
+    //setStateChange = false;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Question Set List Screen'),
@@ -112,8 +130,62 @@ class _SetListScreenState extends State<SetListScreen> {
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index) {
                 final set = snapshot.data![index];
+                final successRate = (_calculateSuccessRate(set) * 100).toStringAsFixed(1);
+                final totalQuestions = set.questions.length;
                 return GridTile(
-                  child: SetCard(set),
+                  child: Card(
+                    elevation: 4.0,
+                    child: 
+                      ListTile(
+                        title: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              set.setName,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Questions: $totalQuestions',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            Text(
+                              'Success Rate: $successRate%',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            Switch(
+                              // This bool value toggles the switch.
+                              value: set.isActive,
+                              onChanged: (bool value) {
+                                // This is called when the user toggles the switch.
+                                setState(() {
+                                  //setStateChange = true;
+                                  set.isActive = !set.isActive;
+                                  _setProvider.updateSetIsActive(set.setName, set.isActive);
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      onTap: () async {
+                        final bool? result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => QuestionListScreen(set.setName),
+                          ),
+                        );
+                        if (result == true) {
+                          setState(() {
+                            questionSets.then((sets) {
+                              sets.remove(set);
+                            });
+                            _setProvider.deleteSet(set.setName);
+                          });
+                        }
+                      },
+                    ),
+                  ),
                 );
               },
             );
@@ -123,99 +195,6 @@ class _SetListScreenState extends State<SetListScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _showNewSetDialog,
         child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class SwitchExample extends StatefulWidget {
-  final QuestionSet s;
-  const SwitchExample({super.key, required this.s});
-
-  @override
-  State<SwitchExample> createState() => _SwitchExampleState();
-}
-
-class _SwitchExampleState extends State<SwitchExample> {
-
-  //late final SetProvider _setProvider;
-  
-  //@override
-  //void initState() {
-  //  super.initState();
-  //  _setProvider = Provider.of<SetProvider>(context, listen: false);
-  //}
-
-  @override
-  Widget build(BuildContext context) {
-    final SetProvider setProvider = Provider.of<SetProvider>(context);
-    return Switch(
-      // This bool value toggles the switch.
-      value: widget.s.isActive,
-      onChanged: (bool value) {
-        // This is called when the user toggles the switch.
-        setState(() {
-          widget.s.isActive = !widget.s.isActive;
-          setProvider.updateSetIsActive(widget.s.setName, widget.s.isActive);
-        });
-      },
-    );
-  }
-}
-
-class SetCard extends StatelessWidget {
-  final QuestionSet s;
-  const SetCard(this.s, {super.key});
-
-  double _calculateSuccessRate() {
-    int totalCorrect = 0;
-    int totalAnswers = 0;
-
-    for (var question in s.questions) {
-      totalCorrect += question.correctAnswers;
-      totalAnswers += question.totalAnswers;
-      debugPrint("${question.correctAnswers}/${question.totalAnswers}");
-    }
-
-    return totalAnswers == 0 ? 0.0 : totalCorrect / totalAnswers;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final successRate = (_calculateSuccessRate() * 100).toStringAsFixed(1);
-    final totalQuestions = s.questions.length;
-    return Card(
-      elevation: 4.0,
-      child: 
-        ListTile(
-          title: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                s.setName,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Questions: $totalQuestions',
-                style: const TextStyle(fontSize: 14),
-              ),
-              Text(
-                'Success Rate: $successRate%',
-                style: const TextStyle(fontSize: 14),
-              ),
-              SwitchExample(s: s),
-            ],
-          ),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => QuestionListScreen(s.setName),
-            ),
-          );
-        },
       ),
     );
   }
