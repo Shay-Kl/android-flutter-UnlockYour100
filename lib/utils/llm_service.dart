@@ -22,7 +22,7 @@ class AnswerGenerator {
   );
   static final GenerativeModel model =
       FirebaseVertexAI.instance.generativeModel(
-    model: SettingsManager.instance.prefs['model'],
+    model: SettingsManager.instance.model,
     systemInstruction: systemInstruction,
     generationConfig: GenerationConfig(
       responseMimeType: 'application/json',
@@ -54,7 +54,7 @@ class QuestionGenerator {
   );
   static final GenerativeModel model =
       FirebaseVertexAI.instance.generativeModel(
-    model: SettingsManager.instance.prefs['model'],
+    model: SettingsManager.instance.model,
     systemInstruction: systemInstruction,
     generationConfig: GenerationConfig(
       responseMimeType: 'application/json',
