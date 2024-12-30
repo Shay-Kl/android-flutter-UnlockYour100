@@ -5,6 +5,7 @@ import '../providers/question_provider.dart';
 import 'question_editor_screen.dart';
 import 'question_generator_screen.dart';
 import '../models/question.dart';
+//import '../providers/set_provider.dart';
 // ignore_for_file: use_build_context_synchronously
 
 class QuestionListScreen extends StatefulWidget {
@@ -39,6 +40,12 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar.large(
             title: Text(setName),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () => _showDeleteConfirmationDialog(context, setName),
+              ),
+            ],
           ),
         ],
         body: FutureBuilder(
@@ -48,6 +55,17 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
                 return const Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'No questions available. Please create a new one to continue.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16.0), // Optional: Adjust font size for better visibility
+                    ),
+                  ),
+                );
               } else {
                 return _buildQuestionList(
                   questions: snapshot.data as List<Question>,
@@ -192,4 +210,40 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
       });
     }
   }
+  
+  void _showDeleteConfirmationDialog(BuildContext context, String setName) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Set'),
+          content: const Text('Are you sure you want to delete this set?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Cancel deletion
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                // TODO: Decide how to handle deletion
+                // Delete the set
+                //final setProvider = Provider.of<SetProvider>(context, listen: false);
+                //await setProvider.deleteSet(setName);
+                Navigator.pop(context); // Close dialog
+                //Navigator.pop(context); // Pop the current screen
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 }
+
+

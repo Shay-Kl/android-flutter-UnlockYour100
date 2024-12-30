@@ -3,11 +3,12 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Question {
-  // TODO: add stats for correct/incorrect answers
   String? id;
   final String question;
   final String correctAnswer;
   final List<String> wrongAnswers;
+  int correctAnswers = 0;
+  int totalAnswers = 0;
 
   List<String> get answers => [correctAnswer, ...wrongAnswers];
 

@@ -19,7 +19,7 @@ class LoginScreen extends StatelessWidget {
         );
       }
     } catch (error) {
-      print('Google Sign-In error: $error');
+      debugPrint('Google Sign-In error: $error');
     }
   }
 
