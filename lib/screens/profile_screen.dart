@@ -14,35 +14,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Map<String, String>? _settings;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await SettingsManager.instance.load(authProvider.userEmail ?? '');
-    setState(() {
-      _settings = SettingsManager.instance.currentSettings;
-    });
-  }
-
-  void _updateSetting(String key, String value) {
-    final email =
-        Provider.of<AuthProvider>(context, listen: false).userEmail ?? '';
-    SettingsManager.instance.update(email, key, value);
-
-    if (key == 'theme') {
-      Provider.of<ThemeProvider>(context, listen: false).setTheme(value);
-    }
-
-    setState(() {
-      _settings = SettingsManager.instance.currentSettings;
-    });
-  }
+  final _settings = SettingsManager.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SettingsTile.navigation(
           leading: const Icon(Icons.auto_awesome),
           title: const Text('Language Model'),
-          value: Text(_settings?['model'] ?? ''),
+          value: Text(_settings.current['model']!),
           onPressed: (context) => _showOptionsDialog(
             'Language Model',
             'model',
@@ -129,8 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SettingsTile.navigation(
           leading: const Icon(Icons.palette),
           title: const Text('Theme'),
-          value:
-              Text(Provider.of<ThemeProvider>(context).getCurrentThemeName()),
+          value: Text(_settings.current['theme']!),
           onPressed: (context) => _showOptionsDialog(
             'Theme',
             'theme',
@@ -141,23 +112,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
-        /*
-        SettingsTile.navigation(
-          leading: const Icon(Icons.notifications),
-          title: const Text('Notification Frequency'),
-          value: Text(_settings?['notification_frequency'] ?? ''),
-          onPressed: (context) => _showOptionsDialog(
-            'Notification Frequency',
-            'notification_frequency',
-            [
-              const MapEntry('Never', 'Turn off notifications'),
-              const MapEntry('Daily', 'Once a day'),
-              const MapEntry('Weekly', 'Once a week'),
-              const MapEntry('Monthly', 'Once a month'),
-            ],
-          ),
-        ),
-        */
       ],
     );
   }
@@ -189,7 +143,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String settingKey,
     List<MapEntry<String, String>> options,
   ) {
-    if (_settings == null) return;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -202,11 +155,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle:
                         option.value.isNotEmpty ? Text(option.value) : null,
                     value: option.key,
-                    groupValue: _settings?[settingKey],
-                    onChanged: (value) {
+                    groupValue: _settings.current[settingKey],
+                    onChanged: (value) async {
                       if (value != null) {
-                        _updateSetting(settingKey, value);
-                        Navigator.pop(context);
+                        await _settings.update(settingKey, value);
+                        if (settingKey == 'theme') {
+                          Provider.of<ThemeProvider>(context, listen: false)
+                              .setTheme(value);
+                        }
+                        setState(() {});
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                        }
                       }
                     },
                   ))

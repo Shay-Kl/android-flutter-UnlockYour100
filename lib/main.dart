@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project/providers/question_provider.dart';
 import 'package:project/providers/set_provider.dart';
+import 'package:project/utils/settings_manager.dart';
 import 'screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -44,7 +45,6 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        // Both QuestionProvider and SetProvider depend on AuthProvider
         ChangeNotifierProxyProvider<AuthProvider, QuestionProvider>(
           create: (_) => QuestionProvider(''),
           update: (_, authProvider, questionProvider) =>
@@ -56,14 +56,24 @@ class MyApp extends StatelessWidget {
               SetProvider(authProvider.userEmail ?? ''),
         ),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
+      child: Consumer2<AuthProvider, ThemeProvider>(
+        builder: (context, authProvider, themeProvider, _) {
+          if (authProvider.isSignedIn) {
+            // Initialize settings when user signs in
+            SettingsManager.instance.load(authProvider.userEmail!).then((_) {
+              themeProvider.setTheme(SettingsManager.instance.theme);
+            });
+          }
           return MaterialApp(
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
               useMaterial3: true,
             ),
-            darkTheme: ThemeData.dark(useMaterial3: true),
+            darkTheme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                  seedColor: Colors.blue, brightness: Brightness.dark),
+              useMaterial3: true,
+            ),
             themeMode: themeProvider.themeMode,
             home: const LoginScreen(),
             debugShowCheckedModeBanner: false,

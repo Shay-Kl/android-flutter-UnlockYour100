@@ -2,29 +2,36 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SettingsManager {
   SettingsManager._privateConstructor();
+  final Map<String, dynamic> _defaults = {
+    'model': 'gemini-1.5-flash',
+    'theme': 'Use device theme'
+  };
   Map<String, dynamic> _prefs = {};
   static final SettingsManager _instance = SettingsManager._privateConstructor();
   static SettingsManager get instance => _instance;
+  late String userEmail;
 
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> load(String userEmail) async {
+    this.userEmail = userEmail;
     final doc = await _firestore.collection('users').doc(userEmail).collection('settings').doc('preferences').get();
+    _prefs = Map<String, dynamic>.from(_defaults);
     if (doc.exists && doc.data() != null) {
-      _prefs = doc.data()!;
+      _prefs.addAll(doc.data()!);
     }
   }
 
-  Future<void> update(String userEmail, String field, dynamic value) async {
+  Future<void> update(String field, dynamic value) async {
     _prefs[field] = value;
     await _firestore.collection('users').doc(userEmail).collection('settings').doc('preferences').set(_prefs);
   }
 
-  String get model => _prefs['model'] ?? 'gemini-1.5-flash';
-  String get theme => _prefs['theme'] ?? 'Use device theme';
+  String get model => _prefs['model'];
+  String get theme => _prefs['theme'];
 
-  Map<String, String> get currentSettings => {
+  Map<String, String> get current => {
         'model': model,
         'theme': theme,
       };
