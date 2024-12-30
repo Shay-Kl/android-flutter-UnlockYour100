@@ -5,6 +5,7 @@ import 'screens/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'providers/auth_provider.dart';
+import 'providers/theme_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,9 +42,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // AuthProvider: The root provider for authentication
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         // Both QuestionProvider and SetProvider depend on AuthProvider
         ChangeNotifierProxyProvider<AuthProvider, QuestionProvider>(
           create: (_) => QuestionProvider(''),
@@ -56,12 +56,19 @@ class MyApp extends StatelessWidget {
               SetProvider(authProvider.userEmail ?? ''),
         ),
       ],
-      child: MaterialApp(
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        ),
-        home: const LoginScreen(),
-        debugShowCheckedModeBanner: false,
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+              useMaterial3: true,
+            ),
+            darkTheme: ThemeData.dark(useMaterial3: true),
+            themeMode: themeProvider.themeMode,
+            home: const LoginScreen(),
+            debugShowCheckedModeBanner: false,
+          );
+        },
       ),
     );
   }

@@ -18,6 +18,7 @@ dependencies:
   google_sign_in: ^6.2.2
   http: ^1.2.2
   provider: ^6.1.2
+  settings_ui: ^2.0.2
 
 dev_dependencies:
   flutter_test:
