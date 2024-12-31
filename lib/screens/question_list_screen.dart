@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import '../providers/question_provider.dart';
+//import '../providers/question_provider.dart';
 import 'question_editor_screen.dart';
 import 'question_generator_screen.dart';
 import '../models/question.dart';
@@ -17,24 +17,13 @@ class QuestionListScreen extends StatefulWidget {
 }
 
 class _QuestionListScreenState extends State<QuestionListScreen> {
-  late Future<List<Question>> questionsFuture;
   late String setName;
-
-  @override
-  void initState() {
-    super.initState();
-    setName = widget.setName;
-    final questionProvider =
-        Provider.of<QuestionProvider>(context, listen: false);
-    questionsFuture = questionProvider.readQuestionsForUser(setName);
-  }
-
-  // -------------------------------------------------------------------------
-  // Build Functions
-  // -------------------------------------------------------------------------
-
   @override
   Widget build(BuildContext context) {
+    final setProvider = Provider.of<SetProvider>(context);
+    setName = widget.setName;
+    final questions = setProvider.getSetByName(setName).questions;
+
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -44,45 +33,33 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
               IconButton(
                 icon: const Icon(Icons.delete),
                 onPressed: () async {
-                final bool? result = await _showDeleteConfirmationDialog(context, setName);
-                if (result == true) {
-                  // User confirmed deletion
-                  //final setProvider = Provider.of<SetProvider>(context, listen: false);
-                  //setProvider.deleteSet(setName);
-                  Navigator.pop(context, true);
+                  final bool? result = await _showDeleteConfirmationDialog(context, setName);
+                  if (result == true) {
+                    // User confirmed deletion
+                    final setProvider = Provider.of<SetProvider>(context, listen: false);
+                    setProvider.deleteSet(setName);
+                    Navigator.pop(context);
                   } else {
-                    // User canceled deletion
-                    debugPrint('Deletion canceled');
+                      // User canceled deletion
+                      debugPrint('Deletion canceled');
                   }
                 },
               ),
             ],
           ),
         ],
-        body: FutureBuilder(
-            future: questionsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text(
-                      'No questions available. Please create a new one to continue.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16.0), // Optional: Adjust font size for better visibility
-                    ),
+        body: questions.isEmpty
+            ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'No questions available. Please create a new one to continue.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16.0),
                   ),
-                );
-              } else {
-                return _buildQuestionList(
-                  questions: snapshot.data as List<Question>,
-                );
-              }
-            }),
+                ),
+              )
+            : _buildQuestionList(questions: questions),
       ),
       floatingActionButton: SpeedDial(
         icon: Icons.add,
@@ -91,12 +68,12 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
           SpeedDialChild(
             child: const Icon(Icons.edit),
             label: 'Create manually',
-            onTap: _handleCreateQuestion,
+            onTap: () {_handleCreateQuestion(setName);},
           ),
           SpeedDialChild(
             child: const Icon(Icons.auto_awesome),
             label: 'Generate with AI',
-            onTap: _handleGenerateQuestions,
+            onTap: () {_handleGenerateQuestions(setName);},
           ),
         ],
       ),
@@ -119,7 +96,7 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
             margin: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
-              onTap: () => _handleEditQuestion(index),
+              onTap: () => _handleEditQuestion(questions, setName, index),
               child: ListTile(
                 title: Text(questions[index].question),
                 subtitle: Column(
@@ -148,33 +125,27 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
   // User Input Handlers
   // -------------------------------------------------------------------------
 
-  void _handleCreateQuestion() async {
+  void _handleCreateQuestion(String setName) async {
     final newQuestion = await Navigator.push(
       context,
       MaterialPageRoute(
           builder: (context) =>
-              QuestionEditorScreen(question: Question.empty())),
+              QuestionEditorScreen(setName: setName, question: Question.empty())),
     );
 
     if (newQuestion != null) {
-      final questionProvider =
-          Provider.of<QuestionProvider>(context, listen: false);
-      final updatedQuestion =
-          await questionProvider.createQuestionForUser(newQuestion, setName);
-      final questions = await questionsFuture;
-      setState(() {
-        questions.add(updatedQuestion);
-      });
+      final setProvider = Provider.of<SetProvider>(context, listen: false);
+      setProvider.addQuestionToSet(setName, newQuestion);
     }
   }
 
-  void _handleEditQuestion(int index) async {
-    final List<Question> questions = await questionsFuture;
+  void _handleEditQuestion(List<Question> questions, String setName, int index) async {
     final question = questions[index];
     final editedQuestion = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => QuestionEditorScreen(
+          setName: setName,
           question: question,
         ),
       ),
@@ -182,43 +153,27 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
 
     if (editedQuestion != null) {
       editedQuestion.id = question.id;
-      final questionProvider =
-          Provider.of<QuestionProvider>(context, listen: false);
-      await questionProvider.updateQuestionForUser(editedQuestion, setName);
-
-      setState(() {
-        questions[index] = editedQuestion;
-      });
+      final setProvider = Provider.of<SetProvider>(context, listen: false);
+      setProvider.updateQuestionInSet(setName, index, editedQuestion);
     }
   }
 
-  void _handleDeleteQuestion(int index) async {
-    List<Question> questions = await questionsFuture;
-    final questionProvider =
-        Provider.of<QuestionProvider>(context, listen: false);
-
-    await questionProvider.deleteQuestionForUser(questions[index], setName);
-
-    setState(() {
-      questions.removeAt(index);
-    });
+  void _handleDeleteQuestion(int index) {
+    final setProvider = Provider.of<SetProvider>(context, listen: false);
+    setProvider.deleteQuestionFromSet(setName, index);
   }
 
-  void _handleGenerateQuestions() async {
+  void _handleGenerateQuestions(String setName) async {
     final newQuestions = await Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) => const QuestionGeneratorScreen()));
-    if (newQuestions == null) return;
-    final questions = await questionsFuture;
-    final questionProvider =
-        Provider.of<QuestionProvider>(context, listen: false);
-    for (final question in newQuestions) {
-      final updatedQuestion =
-          await questionProvider.createQuestionForUser(question, setName);
-      setState(() {
-        questions.add(updatedQuestion);
-      });
+    if (newQuestions != null) {
+      final setProvider = Provider.of<SetProvider>(context, listen: false);
+      for (final question in newQuestions) {
+        question.setName = setName;
+        setProvider.addQuestionToSet(setName, question);
+      }
     }
   }
   
