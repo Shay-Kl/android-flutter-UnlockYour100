@@ -11,7 +11,8 @@ final answerCounts = List.generate(
 
 class QuestionEditorScreen extends StatefulWidget {
   final Question question;
-  const QuestionEditorScreen({super.key, required this.question});
+  final String setName;
+  const QuestionEditorScreen({super.key, required this.setName, required this.question});
 
   @override
   State<QuestionEditorScreen> createState() => _QuestionEditorScreenState();
@@ -78,7 +79,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         child: FilledButton(
-          onPressed: _handleSavePress,
+          onPressed: () {_handleSavePress(widget.setName);},
           child: const Text('Save'),
         ),
       ),
@@ -190,7 +191,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
     });
   }
 
-  void _handleSavePress() {
+  void _handleSavePress(String setName) {
     if (_formKey.currentState!.validate()) {
       final newQuestion = Question(
         question: _questionController.text,
@@ -199,6 +200,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
             .sublist(1, _selectedAnswerCount)
             .map((c) => c.text)
             .toList(),
+        setName: setName,
       );
       Navigator.pop(context, newQuestion);
     }

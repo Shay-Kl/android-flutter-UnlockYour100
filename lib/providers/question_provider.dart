@@ -12,7 +12,7 @@ class QuestionProvider extends ChangeNotifier {
     return _firestore
         .collection('users')
         .doc(userEmail)
-        .collection('sets')
+        .collection('sets2')
         .doc(setName)
         .collection('questions');
   }
@@ -36,7 +36,7 @@ class QuestionProvider extends ChangeNotifier {
       final snapshot = await _firestore
           .collection('users')
           .doc(userEmail)
-          .collection('sets')
+          .collection('sets2')
           .doc(setName)
           .collection('questions')
           .get();

@@ -7,8 +7,9 @@ class Question {
   final String question;
   final String correctAnswer;
   final List<String> wrongAnswers;
-  int correctAnswers = 0;
-  int totalAnswers = 0;
+  int correctAnswers;
+  int totalAnswers;
+  String setName;
 
   List<String> get answers => [correctAnswer, ...wrongAnswers];
 
@@ -17,9 +18,35 @@ class Question {
     required this.question,
     required this.correctAnswer,
     required this.wrongAnswers,
+    this.correctAnswers = 0,
+    this.totalAnswers = 0,
+    required this.setName,
   });
 
-  Question.empty() : this(question: '', correctAnswer: '', wrongAnswers: []);
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! Question) return false;
+    return id == other.id && question == other.question &&
+        correctAnswer == other.correctAnswer &&
+        wrongAnswers == other.wrongAnswers &&
+        correctAnswers == other.correctAnswers &&
+        totalAnswers == other.totalAnswers &&
+        setName == other.setName;
+  }
+
+  @override
+  int get hashCode {
+    return id.hashCode ^
+        question.hashCode ^
+        correctAnswer.hashCode ^
+        wrongAnswers.hashCode ^
+        correctAnswers.hashCode ^
+        totalAnswers.hashCode ^
+        setName.hashCode;
+  }
+
+  Question.empty() : this(question: '', correctAnswer: '', wrongAnswers: [], setName: '');
   
   List<String> getShuffledAnswers() {
     final allAnswers = [correctAnswer, ...wrongAnswers];
@@ -33,6 +60,9 @@ class Question {
       'question': question,
       'correctAnswer': correctAnswer,
       'wrongAnswers': wrongAnswers,
+      'correctAnswers': correctAnswers,
+      'totalAnswers': totalAnswers,
+      'setName': setName,
     };
   }
 
@@ -42,6 +72,9 @@ class Question {
       question: map['question'] as String,
       correctAnswer: map['correctAnswer'] as String,
       wrongAnswers: List<String>.from(map['wrongAnswers'] as List<dynamic>),
+      correctAnswers: map['correctAnswers'] as int? ?? 0,
+      totalAnswers: map['totalAnswers'] as int? ?? 0,
+      setName: map['setName'] as String? ?? '',
     );
   }
 
