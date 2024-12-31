@@ -54,7 +54,7 @@ class _SetListScreenState extends State<SetListScreen> {
     for (var question in s.questions) {
       totalCorrect += question.correctAnswers;
       totalAnswers += question.totalAnswers;
-      debugPrint("${question.correctAnswers}/${question.totalAnswers}");
+      //debugPrint("${question.correctAnswers}/${question.totalAnswers}");
     }
 
     return totalAnswers == 0 ? 0.0 : totalCorrect / totalAnswers;
@@ -62,7 +62,7 @@ class _SetListScreenState extends State<SetListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("set list rebuild");
+    //debugPrint("set list rebuild");
     final setProvider = Provider.of<SetProvider>(context);
     final questionSets = setProvider.sets;
     return Scaffold(
