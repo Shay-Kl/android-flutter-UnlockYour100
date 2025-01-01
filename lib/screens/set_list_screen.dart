@@ -3,6 +3,8 @@ import 'package:project/screens/question_list_screen.dart';
 import '../models/set.dart';
 import 'package:provider/provider.dart';
 import '../providers/set_provider.dart';
+import '../providers/theme_provider.dart';
+import '../models/colors.dart';
 
 class SetListScreen extends StatefulWidget {
   const SetListScreen({super.key});
@@ -13,39 +15,80 @@ class SetListScreen extends StatefulWidget {
 
 class _SetListScreenState extends State<SetListScreen> {
   void _showNewSetDialog() {
-    final TextEditingController controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Enter Set Name'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(hintText: 'New set name'),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close the dialog
-              },
-              child: const Text('Cancel'),
+  final TextEditingController controller = TextEditingController();
+  ColorSchemeKey selectedColorKey = ColorSchemeKey.Default; // Default color key
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Create New Set'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(hintText: 'New set name'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButton<ColorSchemeKey>(
+                  value: selectedColorKey,
+                  isExpanded: true,
+                  items: ColorSchemeKey.values.map((colorKey) {
+                    return DropdownMenuItem<ColorSchemeKey>(
+                      value: colorKey,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 20,
+                            height: 20,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: colorKey.getColorFromScheme(Theme.of(context).colorScheme),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          Text(colorKey.toKeyString()),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (newColorKey) {
+                    setState(() {
+                      selectedColorKey = newColorKey!;
+                    });
+                  },
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () {
-                final newName = controller.text.trim();
-                if (newName.isNotEmpty) {
-                  Provider.of<SetProvider>(context, listen: false)
-                      .createSet(newName);
-                }
-                Navigator.pop(context); // Close the dialog
-              },
-              child: const Text('Create'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close the dialog
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  final newName = controller.text.trim();
+                  if (newName.isNotEmpty) {
+                    Provider.of<SetProvider>(context, listen: false)
+                        .createSet(newName, selectedColorKey);
+                  }
+                  Navigator.pop(context); // Close the dialog
+                },
+                child: const Text('Create'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
 
   double _calculateSuccessRate(QuestionSet s) {
     int totalCorrect = 0;
@@ -54,7 +97,6 @@ class _SetListScreenState extends State<SetListScreen> {
     for (var question in s.questions) {
       totalCorrect += question.correctAnswers;
       totalAnswers += question.totalAnswers;
-      //debugPrint("${question.correctAnswers}/${question.totalAnswers}");
     }
 
     return totalAnswers == 0 ? 0.0 : totalCorrect / totalAnswers;
@@ -62,8 +104,8 @@ class _SetListScreenState extends State<SetListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    //debugPrint("set list rebuild");
     final setProvider = Provider.of<SetProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final questionSets = setProvider.sets;
     return Scaffold(
       appBar: AppBar(
@@ -103,6 +145,14 @@ class _SetListScreenState extends State<SetListScreen> {
             final totalQuestions = set.questions.length;
             return GridTile(
               child: Card(
+                color: set.selectedColorKey.getColorFromScheme(Theme.of(context).colorScheme),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0), // Optional, for rounded corners
+                    side: BorderSide(
+                      color: set.selectedColorKey.getBorderColorFromScheme(Theme.of(context).colorScheme), // Border color
+                      width: 1.0, // Border width
+                    ),
+                  ),
                 elevation: 4.0,
                 child: 
                   ListTile(
@@ -111,17 +161,18 @@ class _SetListScreenState extends State<SetListScreen> {
                       children: [
                         Text(
                           set.setName,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: set.selectedColorKey.getTextColorFromScheme(Theme.of(context).colorScheme),
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 10),
                         Text(
                           'Questions: $totalQuestions',
-                          style: const TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 14, color: set.selectedColorKey.getTextColorFromScheme(Theme.of(context).colorScheme)),
                         ),
                         Text(
                           'Success Rate: $successRate%',
-                          style: const TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 14,color: set.selectedColorKey.getTextColorFromScheme(Theme.of(context).colorScheme)),
                         ),
                         Switch(
                           // This bool value toggles the switch.
@@ -138,7 +189,7 @@ class _SetListScreenState extends State<SetListScreen> {
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => QuestionListScreen(set.setName),
+                        builder: (context) => QuestionListScreen(set),
                       ),
                     );
                   },

@@ -12,7 +12,8 @@ final answerCounts = List.generate(
 class QuestionEditorScreen extends StatefulWidget {
   final Question question;
   final String setName;
-  const QuestionEditorScreen({super.key, required this.setName, required this.question});
+  final bool edit;
+  const QuestionEditorScreen({super.key, required this.setName, required this.question, required this.edit});
 
   @override
   State<QuestionEditorScreen> createState() => _QuestionEditorScreenState();
@@ -65,7 +66,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Question'),
+        title: Text(widget.edit ?'Edit Question' : 'New Question'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),

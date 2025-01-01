@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SettingsManager {
-  SettingsManager._privateConstructor();
+  SettingsManager._privateConstructor(){
+    _prefs = Map<String, dynamic>.from(_defaults);
+  }
+
   final Map<String, dynamic> _defaults = {
     'model': 'gemini-1.5-flash',
     'theme': 'Use device theme'
