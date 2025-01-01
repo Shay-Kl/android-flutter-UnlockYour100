@@ -27,11 +27,17 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              ClipOval(
+                child: Image.asset(
+                  'assets/icon.png',
+                  width: 120,
+                  height: 120,
+                ),
+              ),
+              const SizedBox(height: 24),
               const Text(
                 'UnlockYour100',
                 style: TextStyle(
@@ -39,7 +45,7 @@ class LoginScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () => _handleGoogleSignIn(context),
                 icon: const Icon(Icons.login, color: Colors.red),
@@ -53,7 +59,6 @@ class LoginScreen extends StatelessWidget {
               ),
             ],
           ),
-        ),
       ),
     );
   }

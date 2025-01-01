@@ -1,8 +1,7 @@
 name: project
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0
-
+version: 1.0.0+1
 environment:
   sdk: ^3.5.4
 
@@ -14,6 +13,7 @@ dependencies:
   firebase_vertexai: ^1.0.4
   flutter:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.2
   flutter_speed_dial: ^7.0.0
   google_sign_in: ^6.2.2
   http: ^1.2.2
@@ -24,6 +24,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
-
+flutter_launcher_icons:
+  image_path: "lib/assets/icon.png"
+  android: true
+  adaptive_icon_background: "assets/background_icon.png"
+  adaptive_icon_foreground: "assets/foreground_icon.png"
 flutter:
   uses-material-design: true
+  assets:
+    - assets/

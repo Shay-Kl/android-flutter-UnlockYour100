@@ -16,12 +16,21 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _settings = SettingsManager.instance;
 
+  // -------------------------------------------------------------------------
+  // Build Functions
+  // -------------------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     final scaffoldBackgroundColor = Theme.of(context).scaffoldBackgroundColor;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: const Text('Profile'), actions: [
+        IconButton(
+          icon: const Icon(Icons.info_outline),
+          onPressed: () => _showAboutDialog(context),
+        ),
+      ]),
       body: SettingsList(
         lightTheme: SettingsThemeData(
           settingsListBackground: scaffoldBackgroundColor,
@@ -133,6 +142,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             }
           },
+        ),
+      ],
+    );
+  }
+  // -------------------------------------------------------------------------
+  // User Input Handlers
+  // -------------------------------------------------------------------------
+
+
+  void _showAboutDialog(BuildContext context) {
+    showAboutDialog(
+      context: context,
+      applicationName: 'UnlockYour100',
+      applicationVersion: '1.0.0',
+      applicationIcon: ClipRRect(
+        borderRadius: BorderRadius.circular(100),
+        child: Image.asset(
+          'assets/icon.png',
+          width: 60,
+          height: 60,
+          fit: BoxFit.cover,
+        ),
+      ),
+      children: [
+        const Text(
+          'UnlockYour100 is an educational app designed to help students practice and master their course material through interactive quizzes.',
         ),
       ],
     );
