@@ -6,11 +6,21 @@ import 'question_editor_screen.dart';
 import 'question_generator_screen.dart';
 import '../models/question.dart';
 import '../providers/set_provider.dart';
+import '../models/colors.dart';
+import '../models/set.dart';
+import '../providers/theme_provider.dart';
 // ignore_for_file: use_build_context_synchronously
 
+class SetEditResult {
+  final String name;
+  final ColorSchemeKey color;
+
+  SetEditResult(this.name, this.color);
+}
+
 class QuestionListScreen extends StatefulWidget {
-  final String setName;
-  const QuestionListScreen(this.setName, {super.key});
+  final QuestionSet set;
+  const QuestionListScreen(this.set, {super.key});
 
   @override
   State<QuestionListScreen> createState() => _QuestionListScreenState();
@@ -18,18 +28,31 @@ class QuestionListScreen extends StatefulWidget {
 
 class _QuestionListScreenState extends State<QuestionListScreen> {
   late String setName;
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final setProvider = Provider.of<SetProvider>(context);
-    setName = widget.setName;
-    final questions = setProvider.getSetByName(setName).questions;
+    final currentSet = widget.set;
+    setName = currentSet.setName;
+    final questions = currentSet.questions;
 
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar.large(
-            title: Text(setName),
+            backgroundColor: currentSet.selectedColorKey.getColorFromScheme(Theme.of(context).colorScheme),
+            title: Text(setName, style: TextStyle(color: currentSet.selectedColorKey.getTextColorFromScheme(Theme.of(context).colorScheme))),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () async{
+                  final SetEditResult? result = await _showEditSetDialog(context: context, initialName: setName, initialColor: currentSet.selectedColorKey);
+                  if (result != null) {
+                    setProvider.updateSetColorAndName(setName, result.color, result.name);
+                  }
+                },
+              ),
               IconButton(
                 icon: const Icon(Icons.delete),
                 onPressed: () async {
@@ -39,9 +62,6 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
                     final setProvider = Provider.of<SetProvider>(context, listen: false);
                     setProvider.deleteSet(setName);
                     Navigator.pop(context);
-                  } else {
-                      // User canceled deletion
-                      debugPrint('Deletion canceled');
                   }
                 },
               ),
@@ -130,7 +150,7 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
       context,
       MaterialPageRoute(
           builder: (context) =>
-              QuestionEditorScreen(setName: setName, question: Question.empty())),
+              QuestionEditorScreen(setName: setName, question: Question.empty(), edit: false)),
     );
 
     if (newQuestion != null) {
@@ -147,6 +167,7 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
         builder: (context) => QuestionEditorScreen(
           setName: setName,
           question: question,
+          edit : true
         ),
       ),
     );
@@ -205,7 +226,85 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
   );
 }
 
+Future<SetEditResult?>  _showEditSetDialog({
+  required BuildContext context,
+  required String initialName,
+  required ColorSchemeKey initialColor,
+}) async {
+  final TextEditingController controller = TextEditingController(text: initialName);
+  ColorSchemeKey selectedColorKey = initialColor; // Default color key
 
+  return showDialog<SetEditResult>(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Edit Set'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(hintText: 'Set name'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButton<ColorSchemeKey>(
+                  value: selectedColorKey,
+                  isExpanded: true,
+                  items: ColorSchemeKey.values.map((colorKey) {
+                    return DropdownMenuItem<ColorSchemeKey>(
+                      value: colorKey,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 20,
+                            height: 20,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              color: colorKey.getColorFromScheme(Theme.of(context).colorScheme),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          Text(colorKey.toKeyString()),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (newColorKey) {
+                    setState(() {
+                      selectedColorKey = newColorKey!;
+                    });
+                  },
+                ),
+              ],
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close the dialog
+                },
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  final newName = controller.text.trim();
+                  if (newName.isNotEmpty && (newName != initialName || selectedColorKey != initialColor)) {
+                    Navigator.pop(context, SetEditResult(newName, selectedColorKey));
+                  }
+                  else {
+                    Navigator.pop(context, null); // Close the dialog
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
 }
 
 

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/question.dart';
 import '../providers/set_provider.dart';
 import 'package:provider/provider.dart';
+import '../models/colors.dart';
+import '../providers/theme_provider.dart';
+//import '../models/set.dart';
 
 class QuizScreen extends StatefulWidget {
 
@@ -45,9 +48,9 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final setProvider = Provider.of<SetProvider>(context);
     if (setStateChange == false){
-      //debugPrint("setStateChange == false");
       List<Question>questions = _fetchActiveQuestions(setProvider);
       if (!areListsEqual(questions, this.questions)) {
         this.questions = questions;
@@ -63,9 +66,6 @@ class _QuizScreenState extends State<QuizScreen> {
         selectedAnswer = null;
         hasAnswered = false;
       }
-    }
-    else {
-      debugPrint("setStateChange == true");
     }
     setStateChange = false;
     final colorScheme = Theme.of(context).colorScheme;
@@ -90,18 +90,39 @@ class _QuizScreenState extends State<QuizScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Card(
+                  color: setProvider.getSetByName(question!.setName).selectedColorKey.getColorFromScheme(Theme.of(context).colorScheme),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0), // Optional, for rounded corners
+                    side: BorderSide(
+                      color: setProvider.getSetByName(question!.setName).selectedColorKey.getBorderColorFromScheme(Theme.of(context).colorScheme), // Border color
+                      width: 1.0, // Border width
+                    ),
+                  ),    
                   elevation: 4.0,
-                  color: colorScheme.primary,
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      //"${question!.question} ${question!.correctAnswers}/${question!.totalAnswers}",
-                      question!.question,
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: colorScheme.onPrimary,
-                      ),
-                      textAlign: TextAlign.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // Ensures the column takes minimal vertical space
+                      children: [
+                        Text(
+                          question!.question,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: setProvider.getSetByName(question!.setName).selectedColorKey.getTextColorFromScheme(Theme.of(context).colorScheme),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8), // Spacer between the question and setName
+                        Text(
+                          question!.setName, // Display the setName here
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: setProvider.getSetByName(question!.setName).selectedColorKey.getTextColorFromScheme(Theme.of(context).colorScheme),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -125,12 +146,13 @@ class _QuizScreenState extends State<QuizScreen> {
                         });
                       }
                     },
+                    //TODO: check colors
                     child: Card(
                       elevation: 2.0,
                       color: isSelected
-                        ? (isCorrect ? const Color.fromARGB(255, 0, 110, 66) : const Color.fromARGB(255, 150, 0, 24))
+                        ? (isCorrect ? const Color.fromARGB(255, 45, 221, 93) : const Color.fromARGB(255, 251, 66, 90))
                           : (isCorrect && selectedAnswer != null
-                            ? const Color.fromARGB(255, 0, 110, 66)
+                            ? const Color.fromARGB(255, 45, 221, 93)
                               : colorScheme.surfaceContainer),
                       child: 
                         Padding(
@@ -140,7 +162,7 @@ class _QuizScreenState extends State<QuizScreen> {
                             style: TextStyle(
                               fontSize: 18,
                               color: (isSelected || (isCorrect && selectedAnswer != null))
-                                  ? colorScheme.onPrimary
+                                  ? const Color.fromARGB(255, 255, 255, 255)
                                   : colorScheme.onSurface,
                             ),
                             textAlign: TextAlign.center,
@@ -156,7 +178,7 @@ class _QuizScreenState extends State<QuizScreen> {
             padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
             child: FilledButton(
               style: TextButton.styleFrom(
-                backgroundColor: hasAnswered ? colorScheme.primary : colorScheme.surfaceDim,
+                backgroundColor: hasAnswered ? colorScheme.primary : colorScheme.surfaceContainer,
               ),
               onPressed: () {
                 setState(() {
@@ -178,7 +200,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   }
                 });
               },
-              child: Text('Next Question',style: TextStyle(color: hasAnswered ? colorScheme.onPrimary : colorScheme.outline),),
+              child: Text('Next Question',style: TextStyle(color: hasAnswered ? colorScheme.onPrimary : colorScheme.onSurface),),
             ),
           ),
     );

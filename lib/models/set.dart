@@ -3,24 +3,29 @@ import 'question.dart';
 import 'colors.dart';
 
 class QuestionSet {
-  final String setName;
+  String? id;
+  String setName;
   bool isActive;
   final List<Question> questions;
-  AppColor selectedColor;
+  ColorSchemeKey selectedColorKey;
+  //usage: set.selectedColorKey.getColorFromScheme(colorScheme);
 
-  QuestionSet({
+  QuestionSet(
+    {
+    this.id,
     required this.setName,
     this.isActive = true,
     required this.questions,
-    this.selectedColor = AppColor.none,
+    this.selectedColorKey = ColorSchemeKey.Default,
   });
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'setName': setName,
       'isActive': isActive,
       'questions': questions.map((q) => q.toMap()).toList(),
-      'selectedColor': selectedColor.index,
+      'selectedColorKey': selectedColorKey.toKeyString(),
     };
   }
 
@@ -39,19 +44,19 @@ class QuestionSet {
     Map<String, dynamic> data,
     List<Question> questions,) 
     {
+    final id = data['id'] as String?;
     final setName = data['setName'] as String? ?? 'Unnamed Set';
     final isActive = data['isActive'] as bool? ?? true;
-    final selectedColorIndex = data['selectedColor'] as int?;
-    final selectedColor = selectedColorIndex != null &&
-            selectedColorIndex < AppColor.values.length
-        ? AppColor.values[selectedColorIndex]
-        : AppColor.none;
+    final selectedColorKey =  data['selectedColorKey'] != null
+          ? ColorSchemeKeyExtension.fromKeyString(data['selectedColorKey'])
+          : ColorSchemeKey.Default;
 
     return QuestionSet(
+      id: id,
       setName: setName,
       isActive: isActive,
       questions: questions,
-      selectedColor: selectedColor,
+      selectedColorKey: selectedColorKey,
     );
   }
 
@@ -59,19 +64,20 @@ class QuestionSet {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! QuestionSet) return false;
-    return setName == other.setName &&
+    return id == other.id && setName == other.setName &&
         isActive == other.isActive &&
         questions.length == other.questions.length &&
         questions.every((q) => other.questions.contains(q)) &&
-        selectedColor == other.selectedColor;
+        selectedColorKey == other.selectedColorKey;
   }
 
   @override
   int get hashCode {
-    return setName.hashCode ^
+    return id.hashCode ^
+        setName.hashCode ^
         isActive.hashCode ^
         questions.hashCode ^
-        selectedColor.hashCode;
+        selectedColorKey.hashCode;
   }
 }
 
