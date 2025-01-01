@@ -48,17 +48,17 @@ class _HomeScreenState extends State<HomeScreen> {
           animationDuration: const Duration(milliseconds: 300),
           destinations: const [
             NavigationDestination(
-              icon: Icon(Icons.question_mark_outlined),
-              selectedIcon: Icon(Icons.question_mark),
+              icon: Icon(Icons.assignment_outlined),  // Changed from quiz_outlined
+              selectedIcon: Icon(Icons.assignment),   // Changed from quiz
               label: 'Quiz',
             ),
             NavigationDestination(
-              icon: Icon(Icons.list_outlined),
-              selectedIcon: Icon(Icons.list),
+              icon: Icon(Icons.folder_outlined),
+              selectedIcon: Icon(Icons.folder),
               label: 'Library',
             ),
             NavigationDestination(
-              icon: Icon(Icons.person_outline),
+              icon: Icon(Icons.person_outlined),
               selectedIcon: Icon(Icons.person),
               label: 'Profile',
             ),
