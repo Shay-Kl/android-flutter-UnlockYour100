@@ -13,7 +13,7 @@ class SetProvider extends ChangeNotifier {
   
   SetProvider(this.userEmail){
     if (userEmail.isNotEmpty) {
-     _setCollection = _firestore.collection('users').doc(userEmail).collection('sets2');
+     _setCollection = _firestore.collection('users').doc(userEmail).collection('sets');
       _fetchSets(); // Initialize local cache
       _listenToFirestore();
     }
@@ -143,10 +143,17 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
       setId = _sets[setIndex].id!;
       _sets[setIndex].selectedColorKey = colorKey;
       _sets[setIndex].setName = newName;
+      for (final question in _sets[setIndex].questions) {
+        question.setName = newName; 
+      }
       await _setCollection.doc(setId).update({
         'selectedColorKey': colorKey.toKeyString(),
         'setName': newName,
       });
+      final questionsSnapshot = await _setCollection.doc(setId).collection('questions').get();
+      for (final questionDoc in questionsSnapshot.docs) {
+        await questionDoc.reference.update({'setName': newName});
+      }
       // After updating Firestore, notify listeners to reflect the change locally
       notifyListeners();
     } catch (e) {

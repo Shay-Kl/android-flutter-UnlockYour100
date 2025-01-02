@@ -83,6 +83,9 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
       ),
       floatingActionButton: SpeedDial(
         icon: Icons.add,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         activeIcon: Icons.close,
         children: [
           SpeedDialChild(
@@ -232,7 +235,7 @@ Future<SetEditResult?>  _showEditSetDialog({
   required ColorSchemeKey initialColor,
 }) async {
   final TextEditingController controller = TextEditingController(text: initialName);
-  ColorSchemeKey selectedColorKey = initialColor; // Default color key
+  ColorSchemeKey selectedColorKey = initialColor;
 
   return showDialog<SetEditResult>(
     context: context,
@@ -249,40 +252,55 @@ Future<SetEditResult?>  _showEditSetDialog({
                   decoration: const InputDecoration(hintText: 'Set name'),
                 ),
                 const SizedBox(height: 16),
-                DropdownButton<ColorSchemeKey>(
-                  value: selectedColorKey,
-                  isExpanded: true,
-                  items: ColorSchemeKey.values.map((colorKey) {
-                    return DropdownMenuItem<ColorSchemeKey>(
-                      value: colorKey,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 20,
-                            height: 20,
-                            margin: const EdgeInsets.only(right: 8),
-                            decoration: BoxDecoration(
-                              color: colorKey.getColorFromScheme(Theme.of(context).colorScheme),
-                              shape: BoxShape.circle,
+                Container(
+                  height: 180,
+                  width: double.maxFinite,
+                  child: GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 1,
+                    ),
+                    itemCount: ColorSchemeKey.values.length,
+                    itemBuilder: (context, index) {
+                      final colorKey = ColorSchemeKey.values[index];
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            selectedColorKey = colorKey;
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: colorKey.getColorFromScheme(
+                                Theme.of(context).colorScheme),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: selectedColorKey == colorKey
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.outline,
+                              width: selectedColorKey == colorKey ? 3 : 1,
                             ),
                           ),
-                          Text(colorKey.toKeyString()),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (newColorKey) {
-                    setState(() {
-                      selectedColorKey = newColorKey!;
-                    });
-                  },
+                          child: selectedColorKey == colorKey
+                              ? Icon(
+                                  Icons.check,
+                                  color: colorKey.getTextColorFromScheme(
+                                      Theme.of(context).colorScheme),
+                                )
+                              : null,
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
             actions: <Widget>[
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context); // Close the dialog
+                  Navigator.pop(context);
                 },
                 child: const Text('Cancel'),
               ),
@@ -293,7 +311,7 @@ Future<SetEditResult?>  _showEditSetDialog({
                     Navigator.pop(context, SetEditResult(newName, selectedColorKey));
                   }
                   else {
-                    Navigator.pop(context, null); // Close the dialog
+                    Navigator.pop(context, null);
                   }
                 },
                 child: const Text('Save'),

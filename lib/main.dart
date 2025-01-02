@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:project/providers/question_provider.dart';
 import 'package:project/providers/set_provider.dart';
 import 'package:project/utils/settings_manager.dart';
 import 'screens/login_screen.dart';
@@ -45,11 +44,6 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProxyProvider<AuthProvider, QuestionProvider>(
-          create: (_) => QuestionProvider(''),
-          update: (_, authProvider, questionProvider) =>
-              QuestionProvider(authProvider.userEmail ?? ''),
-        ),
         ChangeNotifierProxyProvider<AuthProvider, SetProvider>(
           create: (_) => SetProvider(''),
           update: (_, authProvider, setProvider) =>
