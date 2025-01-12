@@ -8,6 +8,12 @@ const int maxFileSize = 10 * 1024 * 1024;
 enum SourceType { text, file }
 enum Difficulty { trivial, moderate, challenging }
 
+// Add these constants
+const minAnswerCount = 2;
+const maxAnswerCount = 5;
+final answerCounts = List.generate(
+    maxAnswerCount - minAnswerCount + 1, (i) => i + minAnswerCount);
+
 class QuestionGeneratorScreen extends StatefulWidget {
   const QuestionGeneratorScreen({super.key});
 
@@ -19,6 +25,7 @@ class QuestionGeneratorScreen extends StatefulWidget {
 class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
   final _formKey = GlobalKey<FormState>();
   int _selectedQuestionCount = 8;
+  int _selectedAnswerCount = 4;  // Add this line
   Difficulty _selectedDifficulty = Difficulty.moderate; // Updated type
   SourceType _materialSourceType = SourceType.file;
   SourceType _styleSourceType = SourceType.file;
@@ -51,14 +58,21 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
               ),
               const SizedBox(height: 8),
               _buildQuestionCountSelector(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
+              Text(
+                'Answers per Question:',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              _buildAnswerCountSelector(),
+              const SizedBox(height: 15),
               Text(
                 'Difficulty:',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
               _buildDifficultySelector(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
               Text(
                 'Question Topic:',
                 style: Theme.of(context).textTheme.titleMedium,
@@ -74,7 +88,7 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
                 fileButtonText: 'Upload Course Material',
                 selectedFile: _materialFile,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
               Text(
                 'Question Style:',
                 style: Theme.of(context).textTheme.titleMedium,
@@ -227,6 +241,28 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
     );
   }
 
+  Widget _buildAnswerCountSelector() {
+    return Center(
+      child: SizedBox(
+        width: 700,
+        child: SegmentedButton<int>(
+          segments: answerCounts.map((count) {
+            return ButtonSegment<int>(
+              value: count,
+              label: Text(count.toString(), style: const TextStyle(fontSize: 12)),
+            );
+          }).toList(),
+          selected: {_selectedAnswerCount},
+          onSelectionChanged: (newSelection) {
+            setState(() {
+              _selectedAnswerCount = newSelection.first;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildDifficultySelector() {
     return Center(
       child: SizedBox(
@@ -298,7 +334,11 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
 
     try {
       final questions = await QuestionGenerator.generate(
-        materialInput, styleInput, _selectedQuestionCount, _selectedDifficulty,
+        materialInput, 
+        styleInput, 
+        _selectedQuestionCount, 
+        _selectedDifficulty,
+        _selectedAnswerCount,  // Add this parameter
       );
       if (!mounted) return;
       

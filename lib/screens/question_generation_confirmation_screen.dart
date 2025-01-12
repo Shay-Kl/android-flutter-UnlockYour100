@@ -74,9 +74,10 @@ class _QuestionGenerationConfirmationScreenState
         },
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 4),  // Changed from 16 to 4
         child: Row(
           children: [
+            const SizedBox(width: 20),  // Add this to match card margin
             Checkbox(
               value: _selectedIndices.length == widget.questions.length,
               tristate: true,
@@ -94,15 +95,18 @@ class _QuestionGenerationConfirmationScreenState
             ),
             const Text('Select All'),
             const Spacer(),
-            FilledButton(
-              onPressed: () {
-                final selectedQuestions = <Question>[];
-                for (var i in _selectedIndices) {
-                  selectedQuestions.add(widget.questions[i]);
-                }
-                Navigator.pop(context, selectedQuestions);
-              },
-              child: const Text('Add to Set'),
+            Padding(  // Wrap FilledButton with Padding
+              padding: const EdgeInsets.all(12),
+              child: FilledButton(
+                onPressed: () {
+                  final selectedQuestions = <Question>[];
+                  for (var i in _selectedIndices) {
+                    selectedQuestions.add(widget.questions[i]);
+                  }
+                  Navigator.pop(context, selectedQuestions);
+                },
+                child: const Text('Add to Set'),
+              ),
             ),
           ],
         ),

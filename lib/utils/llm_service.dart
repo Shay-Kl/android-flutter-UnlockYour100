@@ -68,8 +68,12 @@ class QuestionGenerator {
     Difficulty.challenging: ' Make the questions as challenging as you can.',
   };
 
-  static Future<List<Question>> generate(LLMInput material, LLMInput format,
-      int questionCount, Difficulty difficulty) async {
+  static Future<List<Question>> generate(
+      LLMInput material,
+      LLMInput format,
+      int questionCount,
+      Difficulty difficulty,
+      int answerCount) async {  // Add answerCount parameter
     final formatPrompt = format is TextInput
         ? TextPart(format.text)
         : InlineDataPart(
@@ -81,7 +85,7 @@ class QuestionGenerator {
             (material as FileInput).getMimeType(), material.file.bytes!);
 
     final content = Content.multi([
-      TextPart('Generate $questionCount questions.'),
+      TextPart('Generate exactly $questionCount questions with exactly $answerCount answers each (1 correct, ${answerCount-1} incorrect).'),
       TextPart(difficultyMap[difficulty]!),
       TextPart('The questions should have a format similar to that of:\n'),
       formatPrompt,
