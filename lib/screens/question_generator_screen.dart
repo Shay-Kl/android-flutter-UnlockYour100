@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-//import 'package:project/models/question.dart';
+import 'package:project/screens/question_generation_confirmation_screen.dart';
 import '../utils/llm_service.dart';
 
 const int maxFileSize = 10 * 1024 * 1024;
@@ -301,7 +301,20 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
         materialInput, styleInput, _selectedQuestionCount, _selectedDifficulty,
       );
       if (!mounted) return;
-      Navigator.pop(context, questions);
+      
+      final selectedQuestions = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => QuestionGenerationConfirmationScreen(
+            questions: questions,
+          ),
+        ),
+      );
+      
+      if (selectedQuestions != null) {
+        if (!mounted) return;
+        Navigator.pop(context, selectedQuestions);
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error generating questions: $e')),
