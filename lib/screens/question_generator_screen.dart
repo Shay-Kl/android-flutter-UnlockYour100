@@ -24,7 +24,7 @@ class QuestionGeneratorScreen extends StatefulWidget {
 
 class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
   final _formKey = GlobalKey<FormState>();
-  int _selectedQuestionCount = 8;
+  int _selectedQuestionCount = 5;
   int _selectedAnswerCount = 4;  // Add this line
   Difficulty _selectedDifficulty = Difficulty.moderate; // Updated type
   SourceType _materialSourceType = SourceType.file;
@@ -58,7 +58,7 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
               ),
               const SizedBox(height: 8),
               _buildQuestionCountSelector(),
-              const SizedBox(height: 15),
+              const SizedBox(height: 10),
               Text(
                 'Answers per Question:',
                 style: Theme.of(context).textTheme.titleMedium,
@@ -90,7 +90,7 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
               ),
               const SizedBox(height: 15),
               Text(
-                'Question Style:',
+                'Question Style (Optional):',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
@@ -228,8 +228,8 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
         Slider(
           value: _selectedQuestionCount.toDouble(),
           min: 1,
-          max: 15,
-          divisions: 14,
+          max: 20,
+          divisions: 19,
           label: _selectedQuestionCount.toString(),
           onChanged: (value) {
             setState(() {
