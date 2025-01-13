@@ -36,6 +36,10 @@ class _QuestionGenerationConfirmationScreenState
           return Card.outlined(
             margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
             child: ExpansionTile(
+
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               title: Row(
                 children: [
                   Checkbox(

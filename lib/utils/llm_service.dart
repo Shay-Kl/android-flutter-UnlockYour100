@@ -6,10 +6,12 @@ import 'package:project/models/question.dart';
 import 'package:project/utils/settings_manager.dart';
 import '../screens/question_generator_screen.dart';
 
-
 class AnswerGenerator {
   static final systemInstruction = Content.system(
-      'You are an exam writer. You will be presented with a question prompt. Output the correct answer to the question and 4 incorrect answers. All answers should be at most 20 words long.');
+      """You are an exam writer. You will be presented with a question prompt. 
+      Output the correct answer to the question and 4 incorrect answers. 
+      All answers should be at most 20 words long.
+      """);
   static final answersSchema = Schema.object(
     properties: {
       'answers': Schema.object(
@@ -37,8 +39,16 @@ class AnswerGenerator {
 }
 
 class QuestionGenerator {
-  static final systemInstruction = Content.system(
-      'You are an exam writer. You will be presented with course material and a format for questions. Output a series of multiple choice questions in a format like the one presented to you, on topics found in the course material.');
+  static final systemInstruction = Content.system("""You are an exam writer. 
+      You will be presented with course material and a format for questions. 
+      Output a series of multiple choice questions in a format like the one presented to you, 
+      on topics found in the course material. 
+      Try to make the length of correct answers similar to that of incorrect answers so that there wont be any obvious giveaways.
+      Don't repeat the same question twice.
+      Don't use the same answer twice in the same question.
+      Don't repeat information found in the question in the answers.
+      Always output questions and answers in English. No matter what language the input is in.
+      """);
   static final questionsSchema = Schema.object(
     properties: {
       'questions': Schema.array(
@@ -68,12 +78,8 @@ class QuestionGenerator {
     Difficulty.challenging: ' Make the questions as challenging as you can.',
   };
 
-  static Future<List<Question>> generate(
-      LLMInput material,
-      LLMInput format,
-      int questionCount,
-      Difficulty difficulty,
-      int answerCount) async {  // Add answerCount parameter
+  static Future<List<Question>> generate(LLMInput material, LLMInput format,
+      int questionCount, Difficulty difficulty, int answerCount) async {
     final formatPrompt = format is TextInput
         ? TextPart(format.text)
         : InlineDataPart(
@@ -85,7 +91,8 @@ class QuestionGenerator {
             (material as FileInput).getMimeType(), material.file.bytes!);
 
     final content = Content.multi([
-      TextPart('Generate exactly $questionCount questions with exactly $answerCount answers each (1 correct, ${answerCount-1} incorrect).'),
+      TextPart(
+          'Generate exactly $questionCount questions with exactly $answerCount answers each (1 correct, ${answerCount - 1} incorrect).'),
       TextPart(difficultyMap[difficulty]!),
       TextPart('The questions should have a format similar to that of:\n'),
       formatPrompt,
