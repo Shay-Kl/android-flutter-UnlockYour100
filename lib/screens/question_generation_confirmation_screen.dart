@@ -35,44 +35,49 @@ class _QuestionGenerationConfirmationScreenState
           final question = widget.questions[index];
           return Card.outlined(
             margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-            child: ExpansionTile(
-
+            child: Material(
+              clipBehavior: Clip.hardEdge,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
-              title: Row(
-                children: [
-                  Checkbox(
-                    value: _selectedIndices.contains(index),
-                    onChanged: (bool? selected) {
-                      setState(() {
-                        if (selected == true) {
-                          _selectedIndices.add(index);
-                        } else {
-                          _selectedIndices.remove(index);
-                        }
-                      });
-                    },
-                  ),
-                  Expanded(child: Text(question.question)),
-                ],
-              ),
-              children: question.answers
-                  .map(
-                    (answer) => ListTile(
-                      dense: true,
-                      leading: const SizedBox(width: 32),
-                      title: Text(
-                        answer,
-                        style: TextStyle(
-                          color: answer == question.correctAnswer
-                              ? Colors.green
-                              : null,
+              child: ExpansionTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                title: Row(
+                  children: [
+                    Checkbox(
+                      value: _selectedIndices.contains(index),
+                      onChanged: (bool? selected) {
+                        setState(() {
+                          if (selected == true) {
+                            _selectedIndices.add(index);
+                          } else {
+                            _selectedIndices.remove(index);
+                          }
+                        });
+                      },
+                    ),
+                    Expanded(child: Text(question.question)),
+                  ],
+                ),
+                children: question.answers
+                    .map(
+                      (answer) => ListTile(
+                        dense: true,
+                        leading: const SizedBox(width: 32),
+                        title: Text(
+                          answer,
+                          style: TextStyle(
+                            color: answer == question.correctAnswer
+                                ? Colors.green
+                                : null,
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                  .toList(),
+                    )
+                    .toList(),
+              ),
             ),
           );
         },

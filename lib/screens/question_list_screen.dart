@@ -31,7 +31,6 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
     final setProvider = Provider.of<SetProvider>(context);
     final currentSet = widget.set;
     setName = currentSet.setName;
@@ -41,25 +40,35 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar.large(
-            backgroundColor: currentSet.selectedColorKey.getColorFromScheme(Theme.of(context).colorScheme),
-            title: Text(setName, style: TextStyle(color: currentSet.selectedColorKey.getTextColorFromScheme(Theme.of(context).colorScheme))),
+            backgroundColor: currentSet.selectedColorKey
+                .getColorFromScheme(Theme.of(context).colorScheme),
+            title: Text(setName,
+                style: TextStyle(
+                    color: currentSet.selectedColorKey.getTextColorFromScheme(
+                        Theme.of(context).colorScheme))),
             actions: [
               IconButton(
                 icon: const Icon(Icons.edit),
-                onPressed: () async{
-                  final SetEditResult? result = await _showEditSetDialog(context: context, initialName: setName, initialColor: currentSet.selectedColorKey);
+                onPressed: () async {
+                  final SetEditResult? result = await _showEditSetDialog(
+                      context: context,
+                      initialName: setName,
+                      initialColor: currentSet.selectedColorKey);
                   if (result != null) {
-                    setProvider.updateSetColorAndName(setName, result.color, result.name);
+                    setProvider.updateSetColorAndName(
+                        setName, result.color, result.name);
                   }
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.delete),
                 onPressed: () async {
-                  final bool? result = await _showDeleteConfirmationDialog(context, setName);
+                  final bool? result =
+                      await _showDeleteConfirmationDialog(context, setName);
                   if (result == true) {
                     // User confirmed deletion
-                    final setProvider = Provider.of<SetProvider>(context, listen: false);
+                    final setProvider =
+                        Provider.of<SetProvider>(context, listen: false);
                     setProvider.deleteSet(setName);
                     Navigator.pop(context);
                   }
@@ -91,12 +100,16 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
           SpeedDialChild(
             child: const Icon(Icons.edit),
             label: 'Create manually',
-            onTap: () {_handleCreateQuestion(setName);},
+            onTap: () {
+              _handleCreateQuestion(setName);
+            },
           ),
           SpeedDialChild(
             child: const Icon(Icons.auto_awesome),
             label: 'Generate with AI',
-            onTap: () {_handleGenerateQuestions(setName);},
+            onTap: () {
+              _handleGenerateQuestions(setName);
+            },
           ),
         ],
       ),
@@ -107,8 +120,9 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
     return ListView.builder(
       itemCount: questions.length,
       itemBuilder: (context, index) {
+        final question = questions[index];
         return Dismissible(
-          key: ValueKey('${index}_${questions[index].question}'),
+          key: ValueKey('${index}_${question.question}'),
           onDismissed: (direction) {
             _handleDeleteQuestion(index);
           },
@@ -116,25 +130,35 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
             color: Colors.red.shade400,
           ),
           child: Card.outlined(
-            margin: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 20),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(10),
-              onTap: () => _handleEditQuestion(questions, setName, index),
-              child: ListTile(
-                title: Text(questions[index].question),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: questions[index]
-                      .answers
-                      .asMap()
-                      .entries
-                      .map<Widget>((entry) {
-                    final answer = entry.value;
-                    return Container(
-                      padding: const EdgeInsets.symmetric(vertical: 3),
-                      child: Text('- $answer'),
-                    );
-                  }).toList(),
+            margin:
+                const EdgeInsets.only(top: 2, bottom: 8, left: 12, right: 12),
+            child: Material(
+              clipBehavior: Clip.hardEdge,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: InkWell(
+                onTap: () => _handleEditQuestion(questions, setName, index),
+                child: ExpansionTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  title: Text(question.question),
+                  children: question.answers
+                      .map(
+                        (answer) => ListTile(
+                          dense: true,
+                          title: Text(
+                            answer,
+                            style: TextStyle(
+                              color: answer == question.correctAnswer
+                                  ? Colors.green
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
             ),
@@ -152,8 +176,8 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
     final newQuestion = await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) =>
-              QuestionEditorScreen(setName: setName, question: Question.empty(), edit: false)),
+          builder: (context) => QuestionEditorScreen(
+              setName: setName, question: Question.empty(), edit: false)),
     );
 
     if (newQuestion != null) {
@@ -162,16 +186,14 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
     }
   }
 
-  void _handleEditQuestion(List<Question> questions, String setName, int index) async {
+  void _handleEditQuestion(
+      List<Question> questions, String setName, int index) async {
     final question = questions[index];
     final editedQuestion = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => QuestionEditorScreen(
-          setName: setName,
-          question: question,
-          edit : true
-        ),
+            setName: setName, question: question, edit: true),
       ),
     );
 
@@ -202,129 +224,132 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
       }
     }
   }
-  
-  Future<bool?> _showDeleteConfirmationDialog(BuildContext context, String setName) {
-  return showDialog<bool>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Delete Set'),
-        content: const Text('Are you sure you want to delete this set?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              // Cancel deletion
-              Navigator.pop(context, false); // Return false for cancel
-            },
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              // Confirm deletion
-              Navigator.pop(context, true); // Return true for delete
-            },
-            child: const Text('Delete'),
-          ),
-        ],
-      );
-    },
-  );
-}
 
-Future<SetEditResult?>  _showEditSetDialog({
-  required BuildContext context,
-  required String initialName,
-  required ColorSchemeKey initialColor,
-}) async {
-  final TextEditingController controller = TextEditingController(text: initialName);
-  ColorSchemeKey selectedColorKey = initialColor;
+  Future<bool?> _showDeleteConfirmationDialog(
+      BuildContext context, String setName) {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Set'),
+          content: const Text('Are you sure you want to delete this set?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Cancel deletion
+                Navigator.pop(context, false); // Return false for cancel
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Confirm deletion
+                Navigator.pop(context, true); // Return true for delete
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-  return showDialog<SetEditResult>(
-    context: context,
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Edit Set'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: controller,
-                  decoration: const InputDecoration(hintText: 'Set name'),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  height: 180,
-                  width: double.maxFinite,
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                      childAspectRatio: 1,
-                    ),
-                    itemCount: ColorSchemeKey.values.length,
-                    itemBuilder: (context, index) {
-                      final colorKey = ColorSchemeKey.values[index];
-                      return InkWell(
-                        onTap: () {
-                          setState(() {
-                            selectedColorKey = colorKey;
-                          });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: colorKey.getColorFromScheme(
-                                Theme.of(context).colorScheme),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: selectedColorKey == colorKey
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.outline,
-                              width: selectedColorKey == colorKey ? 3 : 1,
-                            ),
-                          ),
-                          child: selectedColorKey == colorKey
-                              ? Icon(
-                                  Icons.check,
-                                  color: colorKey.getTextColorFromScheme(
-                                      Theme.of(context).colorScheme),
-                                )
-                              : null,
-                        ),
-                      );
-                    },
+  Future<SetEditResult?> _showEditSetDialog({
+    required BuildContext context,
+    required String initialName,
+    required ColorSchemeKey initialColor,
+  }) async {
+    final TextEditingController controller =
+        TextEditingController(text: initialName);
+    ColorSchemeKey selectedColorKey = initialColor;
+
+    return showDialog<SetEditResult>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Edit Set'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(hintText: 'Set name'),
                   ),
+                  const SizedBox(height: 16),
+                  Container(
+                    height: 180,
+                    width: double.maxFinite,
+                    child: GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                        childAspectRatio: 1,
+                      ),
+                      itemCount: ColorSchemeKey.values.length,
+                      itemBuilder: (context, index) {
+                        final colorKey = ColorSchemeKey.values[index];
+                        return InkWell(
+                          onTap: () {
+                            setState(() {
+                              selectedColorKey = colorKey;
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: colorKey.getColorFromScheme(
+                                  Theme.of(context).colorScheme),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: selectedColorKey == colorKey
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.outline,
+                                width: selectedColorKey == colorKey ? 3 : 1,
+                              ),
+                            ),
+                            child: selectedColorKey == colorKey
+                                ? Icon(
+                                    Icons.check,
+                                    color: colorKey.getTextColorFromScheme(
+                                        Theme.of(context).colorScheme),
+                                  )
+                                : null,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final newName = controller.text.trim();
+                    if (newName.isNotEmpty &&
+                        (newName != initialName ||
+                            selectedColorKey != initialColor)) {
+                      Navigator.pop(
+                          context, SetEditResult(newName, selectedColorKey));
+                    } else {
+                      Navigator.pop(context, null);
+                    }
+                  },
+                  child: const Text('Save'),
                 ),
               ],
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  final newName = controller.text.trim();
-                  if (newName.isNotEmpty && (newName != initialName || selectedColorKey != initialColor)) {
-                    Navigator.pop(context, SetEditResult(newName, selectedColorKey));
-                  }
-                  else {
-                    Navigator.pop(context, null);
-                  }
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
+            ); 
+          },
+        );
+      },
+    );
+  }
 }
-}
-
-
