@@ -196,7 +196,9 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
       final setProvider = Provider.of<SetProvider>(context, listen: false);
       for (final question in newQuestions) {
         question.setName = setName;
-        setProvider.addQuestionToSet(setName, question);
+        setState(() {
+          setProvider.addQuestionToSet(setName, question);
+        });
       }
     }
   }
