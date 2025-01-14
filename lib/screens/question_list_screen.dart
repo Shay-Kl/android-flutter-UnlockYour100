@@ -9,6 +9,7 @@ import '../providers/set_provider.dart';
 import '../models/colors.dart';
 import '../models/set.dart';
 import '../providers/theme_provider.dart';
+import '../widgets/question_card.dart';
 // ignore_for_file: use_build_context_synchronously
 
 class SetEditResult {
@@ -129,39 +130,10 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
           background: Container(
             color: Colors.red.shade400,
           ),
-          child: Card.outlined(
-            margin:
-                const EdgeInsets.only(top: 2, bottom: 8, left: 12, right: 12),
-            child: Material(
-              clipBehavior: Clip.hardEdge,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: InkWell(
-                onTap: () => _handleEditQuestion(questions, setName, index),
-                child: ExpansionTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  title: Text(question.question),
-                  children: question.answers
-                      .map(
-                        (answer) => ListTile(
-                          dense: true,
-                          title: Text(
-                            answer,
-                            style: TextStyle(
-                              color: answer == question.correctAnswer
-                                  ? Colors.green
-                                  : null,
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-            ),
+          child: QuestionCard(
+            question: question,
+            onTap: () => _handleEditQuestion(questions, setName, index),
+            margin: const EdgeInsets.only(top: 2, bottom: 8, left: 12, right: 12),
           ),
         );
       },

@@ -26,6 +26,7 @@ class QuestionEditorScreen extends StatefulWidget {
 class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
   final FocusNode _questionFocus = FocusNode();
   final TextEditingController _questionController = TextEditingController();
+  final TextEditingController _explanationController = TextEditingController(); // New controller
   final List<TextEditingController> _answerControllers =
       List.generate(maxAnswerCount, (_) => TextEditingController());
   final _formKey = GlobalKey<FormState>();
@@ -44,6 +45,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
       _answerControllers[i].text = question.answers[i];
     }
     _questionController.text = question.question;
+    _explanationController.text = question.explanation; // Initialize explanation
     if (!widget.edit) {
       _questionFocus.requestFocus();
     }
@@ -58,6 +60,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
   void dispose() {
     _questionFocus.dispose();
     _questionController.dispose();
+    _explanationController.dispose(); // Dispose explanation controller
     for (var controller in _answerControllers) {
       controller.dispose();
     }
@@ -168,6 +171,25 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
             ));
       }),
       const Divider(height: 30),
+      TextFormField(
+        controller: _explanationController, // Explanation field
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter an explanation';
+          }
+          return null;
+        },
+        decoration: InputDecoration(
+          suffixIcon: IconButton(
+              onPressed: () {
+                _explanationController.clear();
+              },
+              icon: const Icon(Icons.clear)),
+          labelText: 'Explanation',
+          border: const OutlineInputBorder(),
+        ),
+      ),
+      const Divider(height: 30),
       loading
           ? const CircularProgressIndicator()
           : OutlinedButton.icon(
@@ -207,6 +229,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
             .sublist(1, _selectedAnswerCount)
             .map((c) => c.text)
             .toList(),
+        explanation: _explanationController.text, // Save explanation
         setName: widget.setName,
       );
       Navigator.pop(context, newQuestion);

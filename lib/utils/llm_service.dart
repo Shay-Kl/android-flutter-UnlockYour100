@@ -11,6 +11,9 @@ class AnswerGenerator {
       """You are an exam writer. You will be presented with a question prompt. 
       Output the correct answer to the question and 4 incorrect answers. 
       All answers should be at most 20 words long.
+      Do not explain the rational for the answer within the answer itself. Keep the answers concise. Do this for both correct and incorrect answers.
+      In the case of the correct answer, do not include any information that would make it stand out from the incorrect answers.
+      In the explanation field, provide a brief explanation of why the correct answer is correct. Keep it under 50 words.
       """);
   static final answersSchema = Schema.object(
     properties: {
@@ -18,6 +21,7 @@ class AnswerGenerator {
         properties: {
           'correctAnswer': Schema.string(),
           'wrongAnswers': Schema.array(items: Schema.string()),
+          'explanation': Schema.string(),
         },
       ),
     },
@@ -44,6 +48,11 @@ class QuestionGenerator {
       Output a series of multiple choice questions in a format like the one presented to you, 
       on topics found in the course material. 
       Try to make the length of correct answers similar to that of incorrect answers so that there wont be any obvious giveaways.
+      Do not write a more detailed explanation for the correct answer than for the incorrect answers.
+      Do not explain the rational for the answer within the answer itself. Keep the answers concise. Do this for both correct and incorrect answers.
+      In the case of the correct answer, do not include any information that would make it stand out from the incorrect answers.
+      In the explanation field, provide a brief explanation of why the correct answer is correct. Explain what sets it apart from the incorrect answers.
+
       Don't repeat the same question twice.
       Don't use the same answer twice in the same question.
       Don't repeat information found in the question in the answers.
@@ -57,6 +66,7 @@ class QuestionGenerator {
             'question': Schema.string(),
             'correctAnswer': Schema.string(),
             'wrongAnswers': Schema.array(items: Schema.string()),
+            'explanation': Schema.string(),
           },
         ),
       ),

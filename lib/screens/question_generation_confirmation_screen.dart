@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/question.dart';
+import '../widgets/question_card.dart';
 
 class QuestionGenerationConfirmationScreen extends StatefulWidget {
   final List<Question> questions;
@@ -33,52 +34,18 @@ class _QuestionGenerationConfirmationScreenState
         itemCount: widget.questions.length,
         itemBuilder: (context, index) {
           final question = widget.questions[index];
-          return Card.outlined(
-            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-            child: Material(
-              clipBehavior: Clip.hardEdge,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ExpansionTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                title: Row(
-                  children: [
-                    Checkbox(
-                      value: _selectedIndices.contains(index),
-                      onChanged: (bool? selected) {
-                        setState(() {
-                          if (selected == true) {
-                            _selectedIndices.add(index);
-                          } else {
-                            _selectedIndices.remove(index);
-                          }
-                        });
-                      },
-                    ),
-                    Expanded(child: Text(question.question)),
-                  ],
-                ),
-                children: question.answers
-                    .map(
-                      (answer) => ListTile(
-                        dense: true,
-                        leading: const SizedBox(width: 32),
-                        title: Text(
-                          answer,
-                          style: TextStyle(
-                            color: answer == question.correctAnswer
-                                ? Colors.green
-                                : null,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
+          return QuestionCard(
+            question: question,
+            checkboxValue: _selectedIndices.contains(index),
+            onCheckboxChanged: (bool? selected) {
+              setState(() {
+                if (selected == true) {
+                  _selectedIndices.add(index);
+                } else {
+                  _selectedIndices.remove(index);
+                }
+              });
+            },
           );
         },
       ),
