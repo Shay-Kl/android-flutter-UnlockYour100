@@ -6,16 +6,22 @@ import 'package:project/models/question.dart';
 import 'package:project/utils/settings_manager.dart';
 import '../screens/question_generator_screen.dart';
 
-
 class AnswerGenerator {
   static final systemInstruction = Content.system(
-      'You are an exam writer. You will be presented with a question prompt. Output the correct answer to the question and 4 incorrect answers. All answers should be at most 20 words long.');
+      """You are an exam writer. You will be presented with a question prompt. 
+      Output the correct answer to the question and 4 incorrect answers. 
+      All answers should be at most 20 words long.
+      Do not explain the rational for the answer within the answer itself. Keep the answers concise. Do this for both correct and incorrect answers.
+      In the case of the correct answer, do not include any information that would make it stand out from the incorrect answers.
+      In the explanation field, provide a brief explanation of why the correct answer is correct. Keep it under 50 words.
+      """);
   static final answersSchema = Schema.object(
     properties: {
       'answers': Schema.object(
         properties: {
           'correctAnswer': Schema.string(),
           'wrongAnswers': Schema.array(items: Schema.string()),
+          'explanation': Schema.string(),
         },
       ),
     },
@@ -37,8 +43,21 @@ class AnswerGenerator {
 }
 
 class QuestionGenerator {
-  static final systemInstruction = Content.system(
-      'You are an exam writer. You will be presented with course material and a format for questions. Output a series of multiple choice questions in a format like the one presented to you, on topics found in the course material.');
+  static final systemInstruction = Content.system("""You are an exam writer. 
+      You will be presented with course material and a format for questions. 
+      Output a series of multiple choice questions in a format like the one presented to you, 
+      on topics found in the course material. 
+      Try to make the length of correct answers similar to that of incorrect answers so that there wont be any obvious giveaways.
+      Do not write a more detailed explanation for the correct answer than for the incorrect answers.
+      Do not explain the rational for the answer within the answer itself. Keep the answers concise. Do this for both correct and incorrect answers.
+      In the case of the correct answer, do not include any information that would make it stand out from the incorrect answers.
+      In the explanation field, provide a brief explanation of why the correct answer is correct. Explain what sets it apart from the incorrect answers.
+
+      Don't repeat the same question twice.
+      Don't use the same answer twice in the same question.
+      Don't repeat information found in the question in the answers.
+      Always output questions and answers in English. No matter what language the input is in.
+      """);
   static final questionsSchema = Schema.object(
     properties: {
       'questions': Schema.array(
@@ -47,6 +66,7 @@ class QuestionGenerator {
             'question': Schema.string(),
             'correctAnswer': Schema.string(),
             'wrongAnswers': Schema.array(items: Schema.string()),
+            'explanation': Schema.string(),
           },
         ),
       ),
@@ -65,11 +85,11 @@ class QuestionGenerator {
   static const Map<Difficulty, String> difficultyMap = {
     Difficulty.trivial: ' Make the questions super basic and straightforward.',
     Difficulty.moderate: ' ',
-    Difficulty.challenging: ' Make the questions as challenging as you can.',
+    Difficulty.hard: ' Make the questions as challenging as you can.',
   };
 
   static Future<List<Question>> generate(LLMInput material, LLMInput format,
-      int questionCount, Difficulty difficulty) async {
+      int questionCount, Difficulty difficulty, int answerCount) async {
     final formatPrompt = format is TextInput
         ? TextPart(format.text)
         : InlineDataPart(
@@ -81,7 +101,8 @@ class QuestionGenerator {
             (material as FileInput).getMimeType(), material.file.bytes!);
 
     final content = Content.multi([
-      TextPart('Generate $questionCount questions.'),
+      TextPart(
+          'Generate exactly $questionCount questions with exactly $answerCount answers each (1 correct, ${answerCount - 1} incorrect).'),
       TextPart(difficultyMap[difficulty]!),
       TextPart('The questions should have a format similar to that of:\n'),
       formatPrompt,

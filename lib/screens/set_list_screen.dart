@@ -155,45 +155,54 @@ class _SetListScreenState extends State<SetListScreen> {
                       width: 1.0,
                     ),
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
+                  child: Material(
+                    color: Colors.transparent,
+                    clipBehavior: Clip.hardEdge,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
                     ),
-                    title: Text(
-                      set.setName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: set.selectedColorKey
-                            .getTextColorFromScheme(Theme.of(context).colorScheme),
-                      ),
-                    ),
-                    subtitle: Text(
-                      totalQuestions == 0
-                          ? 'Empty set'
-                          : totalQuestions == 1
-                              ? '$totalQuestions question'
-                              : '$totalQuestions questions',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: set.selectedColorKey
-                            .getTextColorFromScheme(Theme.of(context).colorScheme),
-                      ),
-                    ),
-                    trailing: Switch(
-                      value: set.isActive,
-                      onChanged: (bool value) {
-                        setProvider.updateSetIsActive(set.setName, value);
+                    child: InkWell(
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => QuestionListScreen(set),
+                          ),
+                        );
                       },
-                    ),
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => QuestionListScreen(set),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
                         ),
-                      );
-                    },
+                        title: Text(
+                          set.setName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: set.selectedColorKey
+                                .getTextColorFromScheme(Theme.of(context).colorScheme),
+                          ),
+                        ),
+                        subtitle: Text(
+                          totalQuestions == 0
+                              ? 'Empty set'
+                              : totalQuestions == 1
+                                  ? '$totalQuestions question'
+                                  : '$totalQuestions questions',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: set.selectedColorKey
+                                .getTextColorFromScheme(Theme.of(context).colorScheme),
+                          ),
+                        ),
+                        trailing: Switch(
+                          value: set.isActive,
+                          onChanged: (bool value) {
+                            setProvider.updateSetIsActive(set.setName, value);
+                          },
+                        ),
+                      ),
+                    ),
                   ),
                 );
               },

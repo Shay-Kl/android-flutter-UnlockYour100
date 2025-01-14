@@ -13,7 +13,11 @@ class QuestionEditorScreen extends StatefulWidget {
   final Question question;
   final String setName;
   final bool edit;
-  const QuestionEditorScreen({super.key, required this.setName, required this.question, required this.edit});
+  const QuestionEditorScreen(
+      {super.key,
+      required this.setName,
+      required this.question,
+      required this.edit});
 
   @override
   State<QuestionEditorScreen> createState() => _QuestionEditorScreenState();
@@ -22,6 +26,7 @@ class QuestionEditorScreen extends StatefulWidget {
 class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
   final FocusNode _questionFocus = FocusNode();
   final TextEditingController _questionController = TextEditingController();
+  final TextEditingController _explanationController = TextEditingController(); // New controller
   final List<TextEditingController> _answerControllers =
       List.generate(maxAnswerCount, (_) => TextEditingController());
   final _formKey = GlobalKey<FormState>();
@@ -40,7 +45,10 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
       _answerControllers[i].text = question.answers[i];
     }
     _questionController.text = question.question;
-    _questionFocus.requestFocus();
+    _explanationController.text = question.explanation; // Initialize explanation
+    if (!widget.edit) {
+      _questionFocus.requestFocus();
+    }
     _questionController.addListener(() {
       setState(() {
         questionFilled = _questionController.text.isNotEmpty;
@@ -52,6 +60,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
   void dispose() {
     _questionFocus.dispose();
     _questionController.dispose();
+    _explanationController.dispose(); // Dispose explanation controller
     for (var controller in _answerControllers) {
       controller.dispose();
     }
@@ -66,7 +75,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.edit ?'Edit Question' : 'New Question'),
+        title: Text(widget.edit ? 'Edit Question' : 'New Question'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -80,7 +89,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         child: FilledButton(
-          onPressed: () {_handleSavePress(widget.setName);},
+          onPressed: () => _handleSavePress(),
           child: const Text('Save'),
         ),
       ),
@@ -162,6 +171,25 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
             ));
       }),
       const Divider(height: 30),
+      TextFormField(
+        controller: _explanationController, // Explanation field
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter an explanation';
+          }
+          return null;
+        },
+        decoration: InputDecoration(
+          suffixIcon: IconButton(
+              onPressed: () {
+                _explanationController.clear();
+              },
+              icon: const Icon(Icons.clear)),
+          labelText: 'Explanation',
+          border: const OutlineInputBorder(),
+        ),
+      ),
+      const Divider(height: 30),
       loading
           ? const CircularProgressIndicator()
           : OutlinedButton.icon(
@@ -192,7 +220,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
     });
   }
 
-  void _handleSavePress(String setName) {
+  void _handleSavePress() {
     if (_formKey.currentState!.validate()) {
       final newQuestion = Question(
         question: _questionController.text,
@@ -201,7 +229,8 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
             .sublist(1, _selectedAnswerCount)
             .map((c) => c.text)
             .toList(),
-        setName: setName,
+        explanation: _explanationController.text, // Save explanation
+        setName: widget.setName,
       );
       Navigator.pop(context, newQuestion);
     }

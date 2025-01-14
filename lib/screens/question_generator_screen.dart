@@ -1,12 +1,19 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-//import 'package:project/models/question.dart';
+import 'package:project/screens/question_generation_confirmation_screen.dart';
 import '../utils/llm_service.dart';
 
 const int maxFileSize = 10 * 1024 * 1024;
 
 enum SourceType { text, file }
-enum Difficulty { trivial, moderate, challenging }
+enum Difficulty { trivial, moderate, hard }
+
+// Add these constants
+const minAnswerCount = 2;
+const maxAnswerCount = 5;
+final answerCounts = List.generate(
+    maxAnswerCount - minAnswerCount + 1, (i) => i + minAnswerCount);
 
 class QuestionGeneratorScreen extends StatefulWidget {
   const QuestionGeneratorScreen({super.key});
@@ -18,7 +25,8 @@ class QuestionGeneratorScreen extends StatefulWidget {
 
 class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
   final _formKey = GlobalKey<FormState>();
-  int _selectedQuestionCount = 8;
+  int _selectedQuestionCount = 5;
+  int _selectedAnswerCount = 4;  // Add this line
   Difficulty _selectedDifficulty = Difficulty.moderate; // Updated type
   SourceType _materialSourceType = SourceType.file;
   SourceType _styleSourceType = SourceType.file;
@@ -29,6 +37,8 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
   PlatformFile? _materialFile;
   PlatformFile? _styleFile;
   bool loading = false;
+  bool _isUploading = false;
+  String? _uploadingButtonType;
 
   // -------------------------------------------------------------------------
   // Build Functions
@@ -51,14 +61,21 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
               ),
               const SizedBox(height: 8),
               _buildQuestionCountSelector(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
+              Text(
+                'Answers per Question:',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              _buildAnswerCountSelector(),
+              const SizedBox(height: 15),
               Text(
                 'Difficulty:',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
               _buildDifficultySelector(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
               Text(
                 'Question Topic:',
                 style: Theme.of(context).textTheme.titleMedium,
@@ -74,9 +91,9 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
                 fileButtonText: 'Upload Course Material',
                 selectedFile: _materialFile,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
               Text(
-                'Question Style:',
+                'Question Style (Optional):',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
@@ -100,7 +117,7 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
         child: (loading)
             ? const LinearProgressIndicator()
             : FilledButton(
-                onPressed: _handleGenerate,
+                onPressed: _isUploading ? null : _handleGenerate,
                 child: const Text('Generate'),
               ),
       ),
@@ -115,6 +132,12 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
     required String fileButtonText,
     PlatformFile? selectedFile,
   }) {
+    final bool isMaterial = fileButtonText.contains('Material');
+    final bool isCurrentlyUploading = _isUploading &&
+        _uploadingButtonType == (isMaterial ? 'material' : 'style');
+    final bool otherIsUploading = _isUploading &&
+        _uploadingButtonType != (isMaterial ? 'material' : 'style');
+
     return Column(
       children: [
         Row(
@@ -163,22 +186,32 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
                   selectedFile == null) {
                 return 'Please upload a course material file (PDF or image)';
               }
-              // Remove style file validation - making it optional
               return null;
             },
             builder: (field) {
               return Column(
                 children: [
-                  OutlinedButton.icon(
-                    onPressed: () => _handleFileUpload(
-                      isMaterial: fileButtonText.contains('Material'),
+                  if (isCurrentlyUploading)
+                    const SizedBox(
+                      height: 48,
+                      width: double.infinity,
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else
+                    OutlinedButton.icon(
+                      onPressed: otherIsUploading
+                          ? null
+                          : () => _handleFileUpload(
+                                isMaterial: isMaterial,
+                              ),
+                      icon: const Icon(Icons.upload_file),
+                      label: Text(fileButtonText),
                     ),
-                    icon: const Icon(Icons.upload_file),
-                    label: Text(fileButtonText),
-                  ),
                   if (selectedFile != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
+                      padding: const EdgeInsets.only(top: 2.0),
                       child: Text(
                         'Selected: ${selectedFile.name}',
                         style: Theme.of(context).textTheme.bodySmall,
@@ -186,7 +219,7 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
                     ),
                   if (field.hasError)
                     Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
+                      padding: const EdgeInsets.only(top: 2.0),
                       child: Text(
                         field.errorText ?? '',
                         style: TextStyle(
@@ -214,8 +247,8 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
         Slider(
           value: _selectedQuestionCount.toDouble(),
           min: 1,
-          max: 15,
-          divisions: 14,
+          max: 20,
+          divisions: 19,
           label: _selectedQuestionCount.toString(),
           onChanged: (value) {
             setState(() {
@@ -227,33 +260,53 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
     );
   }
 
-  Widget _buildDifficultySelector() {
+  Widget _buildAnswerCountSelector() {
     return Center(
       child: SizedBox(
         width: 700,
-        child: SegmentedButton<Difficulty>(
-          // Updated type
-          segments: const [
-            ButtonSegment(
-              value: Difficulty.trivial,
-              label: Text('Trivial', style: TextStyle(fontSize: 12)),
-            ),
-            ButtonSegment(
-              value: Difficulty.moderate,
-              label: Text('Moderate', style: TextStyle(fontSize: 12)),
-            ),
-            ButtonSegment(
-              value: Difficulty.challenging,
-              label: Text('Challenging', style: TextStyle(fontSize: 12)),
-            ),
-          ],
-          selected: {_selectedDifficulty},
+        child: SegmentedButton<int>(
+          segments: answerCounts.map((count) {
+            return ButtonSegment<int>(
+              value: count,
+              label: Text(count.toString(), style: const TextStyle(fontSize: 12)),
+            );
+          }).toList(),
+          selected: {_selectedAnswerCount},
           onSelectionChanged: (newSelection) {
             setState(() {
-              _selectedDifficulty = newSelection.first;
+              _selectedAnswerCount = newSelection.first;
             });
           },
-        
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDifficultySelector() {
+    return Center(
+        child: SizedBox(
+      width: 700,
+      child: SegmentedButton<Difficulty>(
+        segments: const [
+          ButtonSegment(
+            value: Difficulty.trivial,
+            label: Text('Trivial', style: TextStyle(fontSize: 12)),
+          ),
+          ButtonSegment(
+            value: Difficulty.moderate,
+            label: Text('Moderate', style: TextStyle(fontSize: 12)),
+          ),
+          ButtonSegment(
+            value: Difficulty.hard,
+            label: Text('Hard', style: TextStyle(fontSize: 12)),
+          ),
+        ],
+        selected: {_selectedDifficulty},
+        onSelectionChanged: (newSelection) {
+          setState(() {
+            _selectedDifficulty = newSelection.first;
+          });
+        },
       ),
     ));
   }
@@ -263,19 +316,68 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
   // -------------------------------------------------------------------------
 
   Future<void> _handleFileUpload({required bool isMaterial}) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
-      withData: true,
-    );
-    if (result != null) {
-      setState(() {
-        if (isMaterial) {
-          _materialFile = result.files.first;
-        } else {
-          _styleFile = result.files.first;
+    if (_isUploading) return;
+
+    setState(() {
+      _isUploading = true;
+      _uploadingButtonType = isMaterial ? 'material' : 'style';
+    });
+
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+      );
+
+      if (result != null && mounted) {
+        final filePath = result.files.single.path;
+        if (filePath == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error: Could not get file path'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
         }
-      });
+
+        final file = File(filePath);
+        final size = await file.length();
+
+        if (size > maxFileSize) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('File too large. Maximum size is 10 MB.'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+
+        // Only now load the file data
+        final fileBytes = await file.readAsBytes();
+        final platformFile = PlatformFile(
+          path: filePath,
+          name: result.files.single.name,
+          size: size,
+          bytes: fileBytes,
+        );
+
+        setState(() {
+          if (isMaterial) {
+            _materialFile = platformFile;
+          } else {
+            _styleFile = platformFile;
+          }
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+          _uploadingButtonType = null;
+        });
+      }
     }
   }
 
@@ -292,17 +394,36 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
     LLMInput styleInput = TextInput(' ');
     if (_styleSourceType == SourceType.file && _styleFile != null) {
       styleInput = FileInput(_styleFile!);
-    } else if (_styleSourceType == SourceType.text && _styleTextController.text.isNotEmpty) {
+    } else if (_styleSourceType == SourceType.text &&
+        _styleTextController.text.isNotEmpty) {
       styleInput = TextInput(_styleTextController.text);
     }
 
     try {
       final questions = await QuestionGenerator.generate(
-        materialInput, styleInput, _selectedQuestionCount, _selectedDifficulty,
+        materialInput,
+        styleInput,
+        _selectedQuestionCount,
+        _selectedDifficulty,
+        _selectedAnswerCount,
       );
       if (!mounted) return;
-      Navigator.pop(context, questions);
+
+      final selectedQuestions = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => QuestionGenerationConfirmationScreen(
+            questions: questions,
+          ),
+        ),
+      );
+
+      if (selectedQuestions != null) {
+        if (!mounted) return;
+        Navigator.pop(context, selectedQuestions);
+      }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error generating questions: $e')),
       );
