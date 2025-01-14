@@ -7,7 +7,7 @@ import '../utils/llm_service.dart';
 const int maxFileSize = 10 * 1024 * 1024;
 
 enum SourceType { text, file }
-enum Difficulty { trivial, moderate, challenging }
+enum Difficulty { trivial, moderate, hard }
 
 // Add these constants
 const minAnswerCount = 2;
@@ -287,7 +287,6 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
         child: SizedBox(
       width: 700,
       child: SegmentedButton<Difficulty>(
-        // Updated type
         segments: const [
           ButtonSegment(
             value: Difficulty.trivial,
@@ -298,8 +297,8 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
             label: Text('Moderate', style: TextStyle(fontSize: 12)),
           ),
           ButtonSegment(
-            value: Difficulty.challenging,
-            label: Text('Challenging', style: TextStyle(fontSize: 12)),
+            value: Difficulty.hard,
+            label: Text('Hard', style: TextStyle(fontSize: 12)),
           ),
         ],
         selected: {_selectedDifficulty},

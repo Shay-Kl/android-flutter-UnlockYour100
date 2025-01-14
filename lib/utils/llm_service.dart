@@ -75,7 +75,7 @@ class QuestionGenerator {
   static const Map<Difficulty, String> difficultyMap = {
     Difficulty.trivial: ' Make the questions super basic and straightforward.',
     Difficulty.moderate: ' ',
-    Difficulty.challenging: ' Make the questions as challenging as you can.',
+    Difficulty.hard: ' Make the questions as challenging as you can.',
   };
 
   static Future<List<Question>> generate(LLMInput material, LLMInput format,
