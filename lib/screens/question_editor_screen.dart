@@ -13,7 +13,11 @@ class QuestionEditorScreen extends StatefulWidget {
   final Question question;
   final String setName;
   final bool edit;
-  const QuestionEditorScreen({super.key, required this.setName, required this.question, required this.edit});
+  const QuestionEditorScreen(
+      {super.key,
+      required this.setName,
+      required this.question,
+      required this.edit});
 
   @override
   State<QuestionEditorScreen> createState() => _QuestionEditorScreenState();
@@ -40,7 +44,9 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
       _answerControllers[i].text = question.answers[i];
     }
     _questionController.text = question.question;
-    _questionFocus.requestFocus();
+    if (!widget.edit) {
+      _questionFocus.requestFocus();
+    }
     _questionController.addListener(() {
       setState(() {
         questionFilled = _questionController.text.isNotEmpty;
@@ -66,7 +72,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.edit ?'Edit Question' : 'New Question'),
+        title: Text(widget.edit ? 'Edit Question' : 'New Question'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -80,7 +86,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         child: FilledButton(
-          onPressed: () {_handleSavePress(widget.setName);},
+          onPressed: () => _handleSavePress(),
           child: const Text('Save'),
         ),
       ),
@@ -192,7 +198,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
     });
   }
 
-  void _handleSavePress(String setName) {
+  void _handleSavePress() {
     if (_formKey.currentState!.validate()) {
       final newQuestion = Question(
         question: _questionController.text,
@@ -201,7 +207,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
             .sublist(1, _selectedAnswerCount)
             .map((c) => c.text)
             .toList(),
-        setName: setName,
+        setName: widget.setName,
       );
       Navigator.pop(context, newQuestion);
     }
