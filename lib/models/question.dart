@@ -11,6 +11,7 @@ class Question {
   int correctAnswers;
   int totalAnswers;
   String setName;
+  int answeredToday;
 
   List<String> get answers => [correctAnswer, ...wrongAnswers];
 
@@ -23,6 +24,7 @@ class Question {
     this.correctAnswers = 0,
     this.totalAnswers = 0,
     required this.setName,
+    this.answeredToday = 0,
   });
 
   @override
@@ -36,7 +38,8 @@ class Question {
         explanation == other.explanation && // Compare explanation
         correctAnswers == other.correctAnswers &&
         totalAnswers == other.totalAnswers &&
-        setName == other.setName;
+        setName == other.setName &&
+        answeredToday == other.answeredToday;
   }
 
   @override
@@ -48,7 +51,8 @@ class Question {
         explanation.hashCode ^ // Include explanation
         correctAnswers.hashCode ^
         totalAnswers.hashCode ^
-        setName.hashCode;
+        setName.hashCode ^
+        answeredToday.hashCode;
   }
 
   Question.empty() : this(question: '', correctAnswer: '', wrongAnswers: [], setName: '');
@@ -69,6 +73,7 @@ class Question {
       'correctAnswers': correctAnswers,
       'totalAnswers': totalAnswers,
       'setName': setName,
+      'answeredToday': answeredToday,
     };
   }
 
@@ -82,6 +87,7 @@ class Question {
       correctAnswers: map['correctAnswers'] as int? ?? 0,
       totalAnswers: map['totalAnswers'] as int? ?? 0,
       setName: map['setName'] as String? ?? '',
+      answeredToday: map['answeredToday'] as int? ?? 0,
     );
   }
 

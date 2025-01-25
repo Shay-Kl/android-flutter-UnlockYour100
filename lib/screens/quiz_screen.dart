@@ -3,7 +3,9 @@ import '../models/question.dart';
 import '../providers/set_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/colors.dart';
-import '../providers/theme_provider.dart';
+import 'package:confetti/confetti.dart';
+import 'package:audioplayers/audioplayers.dart';
+//import '../providers/theme_provider.dart';
 //import '../models/set.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -13,6 +15,8 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
+  AudioPlayer _audioPlayer = AudioPlayer();
+  late ConfettiController _controllerBottomCenter;
   int currentIndex = 0;
   String? selectedAnswer;
   List<Question> questions = [];
@@ -45,9 +49,26 @@ class _QuizScreenState extends State<QuizScreen> {
     return list1.every((q1) => list2.contains(q1));
   }
 
+  void playSound() async {
+    await _audioPlayer.play(AssetSource('ding.mp3'));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controllerBottomCenter =
+        ConfettiController(duration: const Duration(seconds: 2));
+  }
+
+  @override
+  void dispose() {
+    _controllerBottomCenter.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    //final themeProvider = Provider.of<ThemeProvider>(context);
     final setProvider = Provider.of<SetProvider>(context);
     if (setStateChange == false) {
       List<Question> questions = _fetchActiveQuestions(setProvider);
@@ -145,11 +166,138 @@ class _QuizScreenState extends State<QuizScreen> {
                             ),
                             textAlign: TextAlign.center,
                           ),
+                          const SizedBox(
+                              height:
+                                  8), // Spacer between the question and setName
+                          Text(
+                            '${currentIndex+1}/${questions.length}', // Display the setName here
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: setProvider
+                                  .getSetByName(question!.setName)
+                                  .selectedColorKey
+                                  .getTextColorFromScheme(
+                                      Theme.of(context).colorScheme),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 16), // Spacer
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: ConfettiWidget(
+                      confettiController: _controllerBottomCenter,
+                      blastDirectionality: BlastDirectionality.explosive,
+                      emissionFrequency: 0.5,
+                      colors: const [Colors.green, Colors.red, Colors.yellow, Colors.purpleAccent],
+                      numberOfParticles: 20,
+                    ),
+                  ),
+                  if (hasAnswered) ...[
+                    //final isCorrect = answer == question!.correctAnswer;
+                    //final isSelected = selectedAnswer == answer;
+                    if (question!.explanation.isNotEmpty) ...[
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 0),
+                      curve: Curves.fastOutSlowIn,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.outline,
+                          width: 1,
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: null,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              question!.explanation,
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: colorScheme.onSurface,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  AnimatedContainer(
+                      duration: const Duration(milliseconds: 0),
+                      curve: Curves.fastOutSlowIn,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade900,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.outline,
+                          width: 1,
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: null,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              question!.correctAnswer,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                color: Color.fromARGB(255, 255, 255, 255),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (question!.correctAnswer != selectedAnswer) ...[
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 0),
+                      curve: Curves.fastOutSlowIn,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade900,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.outline,
+                          width: 1,
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: null,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              selectedAnswer!,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                color: Color.fromARGB(255, 255, 255, 255),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  ]
+                  else ...[
                   // Answer cards
                   ...shuffledAnswers.map((answer) {
                     final isCorrect = answer == question!.correctAnswer;
@@ -157,7 +305,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     return AnimatedContainer(
                       duration: isSelected
                           ? const Duration(milliseconds: 0)
-                          : const Duration(milliseconds: 350),
+                          : const Duration(milliseconds: 0),
                       curve: Curves.fastOutSlowIn,
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       decoration: BoxDecoration(
@@ -184,6 +332,10 @@ class _QuizScreenState extends State<QuizScreen> {
                                     setStateChange = true;
                                     selectedAnswer = answer;
                                     hasAnswered = true;
+                                    if (answer == question!.correctAnswer) {
+                                      _controllerBottomCenter.play();
+                                      playSound();
+                                    }
                                     setProvider.updateQuestionSuccessRate(
                                         question!,
                                         answer == question!.correctAnswer);
@@ -214,6 +366,7 @@ class _QuizScreenState extends State<QuizScreen> {
                       ),
                     );
                   }),
+                  ],
                 ],
               )),
       bottomNavigationBar: Padding(

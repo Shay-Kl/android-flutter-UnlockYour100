@@ -234,6 +234,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
         setName: widget.setName,
         correctAnswers: q.correctAnswers,
         totalAnswers: q.totalAnswers,
+        answeredToday: q.answeredToday,
       );
       Navigator.pop(context, newQuestion);
     }

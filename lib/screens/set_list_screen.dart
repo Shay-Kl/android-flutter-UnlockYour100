@@ -3,7 +3,7 @@ import 'package:project/screens/question_list_screen.dart';
 import '../models/set.dart';
 import 'package:provider/provider.dart';
 import '../providers/set_provider.dart';
-import '../providers/theme_provider.dart';
+//import '../providers/theme_provider.dart';
 import '../models/colors.dart';
 
 class SetListScreen extends StatefulWidget {
@@ -120,7 +120,7 @@ class _SetListScreenState extends State<SetListScreen> {
   @override
   Widget build(BuildContext context) {
     final setProvider = Provider.of<SetProvider>(context);
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    //final themeProvider = Provider.of<ThemeProvider>(context);
     final questionSets = setProvider.sets;
     return Scaffold(
       appBar: AppBar(

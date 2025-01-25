@@ -96,7 +96,8 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
           oldSets[i].questions[j].explanation != newSets[i].questions[j].explanation ||
           oldSets[i].questions[j].correctAnswers != newSets[i].questions[j].correctAnswers ||
           oldSets[i].questions[j].totalAnswers != newSets[i].questions[j].totalAnswers ||
-          oldSets[i].questions[j].setName != newSets[i].questions[j].setName)
+          oldSets[i].questions[j].setName != newSets[i].questions[j].setName ||
+          oldSets[i].questions[j].answeredToday != newSets[i].questions[j].answeredToday)
           {
         return false;
       }
@@ -275,6 +276,7 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
   
   Future<void> addQuestionToSet(String setName,  Question newQuestion) async{
     try {
+  
       late String setId;
       final setIndex = _sets.indexWhere((set) => set.setName == setName);
       if (setIndex == -1) {
