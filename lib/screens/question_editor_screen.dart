@@ -89,7 +89,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         child: FilledButton(
-          onPressed: () => _handleSavePress(),
+          onPressed: () => _handleSavePress(widget.question),
           child: const Text('Save'),
         ),
       ),
@@ -220,9 +220,10 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
     });
   }
 
-  void _handleSavePress() {
+  void _handleSavePress(Question q) {
     if (_formKey.currentState!.validate()) {
       final newQuestion = Question(
+        id: q.id,
         question: _questionController.text,
         correctAnswer: _answerControllers[0].text,
         wrongAnswers: _answerControllers
@@ -231,6 +232,8 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
             .toList(),
         explanation: _explanationController.text, // Save explanation
         setName: widget.setName,
+        correctAnswers: q.correctAnswers,
+        totalAnswers: q.totalAnswers,
       );
       Navigator.pop(context, newQuestion);
     }

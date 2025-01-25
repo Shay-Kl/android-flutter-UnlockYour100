@@ -125,7 +125,7 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
         return Dismissible(
           key: ValueKey('${index}_${question.question}'),
           onDismissed: (direction) {
-            _handleDeleteQuestion(index);
+            _handleDeleteQuestion(questions[index].id);
           },
           background: Container(
             color: Colors.red.shade400,
@@ -172,13 +172,13 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
     if (editedQuestion != null) {
       editedQuestion.id = question.id;
       final setProvider = Provider.of<SetProvider>(context, listen: false);
-      setProvider.updateQuestionInSet(setName, index, editedQuestion);
+      setProvider.updateQuestionInSet(setName, editedQuestion);
     }
   }
 
-  void _handleDeleteQuestion(int index) {
+  void _handleDeleteQuestion(String? id) async {
     final setProvider = Provider.of<SetProvider>(context, listen: false);
-    setProvider.deleteQuestionFromSet(setName, index);
+    setProvider.deleteQuestionFromSet(setName, id);
   }
 
   void _handleGenerateQuestions(String setName) async {
