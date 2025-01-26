@@ -6,7 +6,9 @@ environment:
   sdk: ^3.5.4
 
 dependencies:
+  audioplayers: ^6.1.0
   cloud_firestore: ^5.6.0
+  confetti: ^0.8.0
   file_picker: ^8.1.7
   firebase_auth: ^5.3.4
   firebase_core: ^3.9.0
@@ -14,6 +16,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_launcher_icons: ^0.14.2
+  flutter_math_fork: ^0.7.3
   flutter_speed_dial: ^7.0.0
   google_sign_in: ^6.2.2
   http: ^1.2.2

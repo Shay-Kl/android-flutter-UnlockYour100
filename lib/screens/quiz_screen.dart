@@ -3,7 +3,11 @@ import '../models/question.dart';
 import '../providers/set_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/colors.dart';
-import '../providers/theme_provider.dart';
+import 'package:confetti/confetti.dart';
+//import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
+
+//import '../providers/theme_provider.dart';
 //import '../models/set.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -13,6 +17,8 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
+  //AudioPlayer _audioPlayer = AudioPlayer();
+  late ConfettiController _controllerBottomCenter;
   int currentIndex = 0;
   String? selectedAnswer;
   List<Question> questions = [];
@@ -45,9 +51,28 @@ class _QuizScreenState extends State<QuizScreen> {
     return list1.every((q1) => list2.contains(q1));
   }
 
+
+  //TODO: decide about sound
+  // void playSound() async {
+  //   await _audioPlayer.play(AssetSource('ding.mp3'));
+  // }
+
+  @override
+  void initState() {
+    super.initState();
+    _controllerBottomCenter =
+        ConfettiController(duration: const Duration(seconds: 2));
+  }
+
+  @override
+  void dispose() {
+    _controllerBottomCenter.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    //final themeProvider = Provider.of<ThemeProvider>(context);
     final setProvider = Provider.of<SetProvider>(context);
     if (setStateChange == false) {
       List<Question> questions = _fetchActiveQuestions(setProvider);
@@ -117,11 +142,15 @@ class _QuizScreenState extends State<QuizScreen> {
                         mainAxisSize: MainAxisSize
                             .min, // Ensures the column takes minimal vertical space
                         children: [
+                          MixedTextWidget(text: question!.question, color: setProvider.getSetByName(question!.setName).selectedColorKey.getTextColorFromScheme(Theme.of(context).colorScheme), fontWeight: FontWeight.bold, fontSize: 20),
+                          const SizedBox(
+                              height:
+                                  8), // Spacer between the question and setName
+                          
                           Text(
-                            question!.question,
+                            question!.setName, // Display the setName here
                             style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
                               color: setProvider
                                   .getSetByName(question!.setName)
                                   .selectedColorKey
@@ -133,8 +162,9 @@ class _QuizScreenState extends State<QuizScreen> {
                           const SizedBox(
                               height:
                                   8), // Spacer between the question and setName
+                                  
                           Text(
-                            question!.setName, // Display the setName here
+                            '${currentIndex+1}/${questions.length}', // Display the setName here
                             style: TextStyle(
                               fontSize: 14,
                               color: setProvider
@@ -150,6 +180,100 @@ class _QuizScreenState extends State<QuizScreen> {
                     ),
                   ),
                   const SizedBox(height: 16), // Spacer
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: ConfettiWidget(
+                      confettiController: _controllerBottomCenter,
+                      blastDirectionality: BlastDirectionality.explosive,
+                      emissionFrequency: 0.5,
+                      colors: const [Colors.green, Colors.red, Colors.yellow, Colors.purpleAccent],
+                      numberOfParticles: 20,
+                    ),
+                  ),
+                  if (hasAnswered) ...[
+                    //final isCorrect = answer == question!.correctAnswer;
+                    //final isSelected = selectedAnswer == answer;
+                    if (question!.explanation.isNotEmpty) ...[
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 0),
+                      curve: Curves.fastOutSlowIn,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.outline,
+                          width: 1,
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: null,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: 
+                            MixedTextWidget(text: question!.explanation, color: colorScheme.onSurface, fontWeight: null, fontSize: 18),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  AnimatedContainer(
+                      duration: const Duration(milliseconds: 0),
+                      curve: Curves.fastOutSlowIn,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade900,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.outline,
+                          width: 1,
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: null,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: 
+                            MixedTextWidget(text: question!.correctAnswer, color: const Color.fromARGB(255, 255, 255, 255), fontWeight: null, fontSize: 18),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (question!.correctAnswer != selectedAnswer) ...[
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 0),
+                      curve: Curves.fastOutSlowIn,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade900,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.outline,
+                          width: 1,
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: null,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: 
+                            MixedTextWidget(text: selectedAnswer!, color: const Color.fromARGB(255, 255, 255, 255), fontWeight: null, fontSize: 18),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  ]
+                  else ...[
                   // Answer cards
                   ...shuffledAnswers.map((answer) {
                     final isCorrect = answer == question!.correctAnswer;
@@ -157,7 +281,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     return AnimatedContainer(
                       duration: isSelected
                           ? const Duration(milliseconds: 0)
-                          : const Duration(milliseconds: 350),
+                          : const Duration(milliseconds: 0),
                       curve: Curves.fastOutSlowIn,
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       decoration: BoxDecoration(
@@ -184,6 +308,10 @@ class _QuizScreenState extends State<QuizScreen> {
                                     setStateChange = true;
                                     selectedAnswer = answer;
                                     hasAnswered = true;
+                                    if (answer == question!.correctAnswer) {
+                                      _controllerBottomCenter.play();
+                                      //playSound();
+                                    }
                                     setProvider.updateQuestionSuccessRate(
                                         question!,
                                         answer == question!.correctAnswer);
@@ -198,22 +326,14 @@ class _QuizScreenState extends State<QuizScreen> {
                               : null,
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
-                            child: Text(
-                              answer,
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: (isSelected ||
-                                        (isCorrect && selectedAnswer != null))
-                                    ? const Color.fromARGB(255, 255, 255, 255)
-                                    : colorScheme.onSurface,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+                            child: 
+                            MixedTextWidget(text: answer, color: (isSelected ||(isCorrect && selectedAnswer != null))? const Color.fromARGB(255, 255, 255, 255): colorScheme.onSurface, fontWeight: null, fontSize: 18),
                           ),
                         ),
                       ),
                     );
                   }),
+                  ],
                 ],
               )),
       bottomNavigationBar: Padding(
@@ -252,6 +372,89 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class MixedTextWidget extends StatelessWidget {
+  final String text;
+  final Color color;
+  final FontWeight? fontWeight;
+  final double fontSize;
+
+  const MixedTextWidget({super.key, required this.text, required this.color, required this.fontWeight, required this.fontSize});
+
+  List<String> parseText(String text) {
+  List<String> parts = [];
+  bool insideLatex = false;  // To track if we're inside a LaTeX block
+  String currentPart = '';   // To build the current part (text or LaTeX)
+
+  for (int i = 0; i < text.length; i++) {
+    // Check for the $ sign to toggle LaTeX block
+    if (text[i] == r'$') {
+      // If we're already inside LaTeX, end the LaTeX part
+      if (insideLatex) {
+        currentPart += text[i];  // Add the closing $
+        parts.add(currentPart);
+        currentPart = '';  // Reset current part
+      } else {
+        // We're entering a LaTeX part
+        if (currentPart.isNotEmpty) {
+          parts.add(currentPart);  // Add any regular text encountered before this LaTeX part
+          currentPart = '';  // Reset current part
+        }
+        currentPart += text[i];  // Add the opening $
+      }
+      insideLatex = !insideLatex;  // Toggle the insideLatex flag
+    } else {
+      currentPart += text[i];  // Add characters to the current part
+    }
+  }
+
+  if (currentPart.isNotEmpty) {
+    parts.add(currentPart);  // Add any remaining part (either regular text or LaTeX)
+  }
+
+  return parts;
+}
+
+  @override
+  Widget build(BuildContext context) {
+
+    final List<String> parts = parseText(text);
+    // Split the text by a delimiter (e.g., "$") to separate LaTeX from regular text
+    final List<InlineSpan> children = [];
+
+    for (int i = 0; i < parts.length; i++) {
+      debugPrint(parts[i]);
+    }
+    // Loop through the parts, adding Text or Math.tex as needed
+    for (int i = 0; i < parts.length; i++) {
+      if (parts[i].startsWith(r'$') && parts[i].endsWith(r'$')) {
+        String latex = parts[i].substring(1, parts[i].length - 1);
+        children.add(WidgetSpan(
+          alignment: PlaceholderAlignment.baseline,
+          baseline: TextBaseline.alphabetic,
+          child: Math.tex(
+          latex,
+          textStyle: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: color),
+        )));
+      } else {
+        children.add(TextSpan(
+          text: parts[i], // Wrap LaTeX content with $ signs
+          style: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: color),
+          //textAlign: TextAlign.center,
+        ));
+      }
+    }
+    return RichText(
+      text: TextSpan(children: children),
+      textAlign: TextAlign.center,
+      textHeightBehavior: const TextHeightBehavior(
+        applyHeightToFirstAscent: false,
+        applyHeightToLastDescent: false,
+        
+    ),
     );
   }
 }

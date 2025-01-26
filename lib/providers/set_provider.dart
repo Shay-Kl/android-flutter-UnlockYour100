@@ -88,8 +88,26 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
         oldSets[i].questions.length != newSets[i].questions.length) {
       return false;
     }
+    for (int j = 0; j < oldSets[i].questions.length; j++) {
+      if (oldSets[i].questions[j].id != newSets[i].questions[j].id ||
+          oldSets[i].questions[j].question != newSets[i].questions[j].question ||
+          oldSets[i].questions[j].correctAnswer != newSets[i].questions[j].correctAnswer ||
+          oldSets[i].questions[j].wrongAnswers.length != newSets[i].questions[j].wrongAnswers.length||
+          oldSets[i].questions[j].explanation != newSets[i].questions[j].explanation ||
+          oldSets[i].questions[j].correctAnswers != newSets[i].questions[j].correctAnswers ||
+          oldSets[i].questions[j].totalAnswers != newSets[i].questions[j].totalAnswers ||
+          oldSets[i].questions[j].setName != newSets[i].questions[j].setName ||
+          oldSets[i].questions[j].answeredToday != newSets[i].questions[j].answeredToday)
+          {
+        return false;
+      }
+      for (int k = 0; k < oldSets[i].questions[j].wrongAnswers.length; k++) {
+        if (oldSets[i].questions[j].wrongAnswers[k] != newSets[i].questions[j].wrongAnswers[k]) {
+          return false;
+        }
+      }
+    }
   }
-
   return true;
 }
 
@@ -258,16 +276,17 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
   
   Future<void> addQuestionToSet(String setName,  Question newQuestion) async{
     try {
+  
       late String setId;
       final setIndex = _sets.indexWhere((set) => set.setName == setName);
       if (setIndex == -1) {
         throw Exception("Set with name '$setName' not found.");
       }
-      _sets[setIndex].questions.add(newQuestion);
       setId = _sets[setIndex].id!;
       final setRef = _setCollection.doc(setId);
       final docRef = await setRef.collection('questions').add(newQuestion.toMap());
       newQuestion.id = docRef.id;
+      _sets[setIndex].questions.add(newQuestion);
       await docRef.update({'id': newQuestion.id});
       notifyListeners();
     } catch (e) {
@@ -275,20 +294,21 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
     }
   }
 
-  Future<void> updateQuestionInSet(String setName, int index, Question editedQuestion) async{
+  Future<void> updateQuestionInSet(String setName, Question editedQuestion) async{
     try {
       late String setId;
       final setIndex = _sets.indexWhere((set) => set.setName == setName);
       if (setIndex == -1) {
         throw Exception("Set with name '$setName' not found.");
       }
-      _sets[setIndex].questions[index] = editedQuestion;
+      final questionIndex = _sets[setIndex].questions.indexWhere((q) => q.id == editedQuestion.id);
+      _sets[setIndex].questions[questionIndex] = editedQuestion;
       setId = _sets[setIndex].id!;
       final setRef = _setCollection.doc(setId);
-      if (index < 0 || index >= _sets[setIndex].questions.length) {
+      if (questionIndex < 0 || questionIndex >= _sets[setIndex].questions.length) {
         throw Exception("Invalid question index.");
       }
-      final questionId = _sets.firstWhere((set) => set.setName == setName).questions[index].id;
+      final questionId = editedQuestion.id;
       await setRef.collection('questions').doc(questionId).update(editedQuestion.toMap());
       notifyListeners();
     } catch (e) {
@@ -296,20 +316,17 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
     }
   }
 
-  Future<void> deleteQuestionFromSet(String setName, int index) async {
+  Future<void> deleteQuestionFromSet(String setName, String? id) async {
     try {
       late String setId;
       final setIndex = _sets.indexWhere((set) => set.setName == setName);
       if (setIndex == -1) {
         throw Exception("Set with name '$setName' not found.");
       }
-      _sets[setIndex].questions.removeAt(index);
+      _sets[setIndex].questions.removeWhere((question) => question.id == id);
       setId = _sets[setIndex].id!;
       final setRef = _setCollection.doc(setId);
-      if (index < 0 || index >= _sets[setIndex].questions.length) {
-        throw Exception("Invalid question index.");
-      }
-      final questionId = _sets.firstWhere((set) => set.setName == setName).questions[index].id;
+      final questionId = id;
       await setRef.collection('questions').doc(questionId).delete();
       notifyListeners();
     } catch (e) {
