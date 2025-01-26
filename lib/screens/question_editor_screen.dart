@@ -174,7 +174,9 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
       TextFormField(
         controller: _explanationController, // Explanation field
         validator: (value) {
-          if (value == null || value.isEmpty) {
+          //TODO: what to do with all old questions that don't have an explanation?
+          //if (value == null || value.isEmpty) {
+          if (value == null) {
             return 'Please enter an explanation';
           }
           return null;
@@ -221,6 +223,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
   }
 
   void _handleSavePress(Question q) {
+    debugPrint(q.answeredToday.toString());
     if (_formKey.currentState!.validate()) {
       final newQuestion = Question(
         id: q.id,

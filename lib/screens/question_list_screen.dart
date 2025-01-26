@@ -49,6 +49,19 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
                         Theme.of(context).colorScheme))),
             actions: [
               IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  showSearch(
+                    context: context,
+                    delegate: QuestionSearchDelegate(
+                      questions: questions,
+                      onEditQuestion: 
+                        _handleEditQuestion,
+                    ),
+                  );
+                },
+              ),
+              IconButton(
                 icon: const Icon(Icons.edit),
                 onPressed: () async {
                   final SetEditResult? result = await _showEditSetDialog(
@@ -323,5 +336,112 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
         );
       },
     );
+  }
+}
+
+class QuestionSearchDelegate extends SearchDelegate {
+  final List<Question> questions;
+  final void Function(List<Question>, String, int) onEditQuestion;
+
+  QuestionSearchDelegate({
+    required this.questions,
+    required this.onEditQuestion,
+  });
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = ''; // Clear the search query
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null); // Close the search bar
+      },
+    );
+  }
+
+  @override
+Widget buildResults(BuildContext context) {
+  // Filter questions based on whether the query matches either the question or the answer
+  final filteredQuestions = questions
+      .where((question) =>
+          question.question.toLowerCase().contains(query.toLowerCase()) || // Match in question
+          question.answers.any((answer) => answer.toLowerCase().contains(query.toLowerCase()))) // Match in any answer
+      .toList();
+
+  return filteredQuestions.isEmpty
+      ? const Center(
+          child: Text(
+            'No matching questions or answers found.',
+            style: TextStyle(fontSize: 16.0),
+          ),
+        )
+      : ListView.builder(
+          itemCount: filteredQuestions.length,
+          itemBuilder: (context, index) {
+            final question = filteredQuestions[index];
+            final originalIndex = questions.indexOf(question);
+            final matchedAnswer = question.answers
+                .firstWhere((answer) => answer.toLowerCase().contains(query.toLowerCase()), orElse: () => question.correctAnswer);
+            return ListTile(
+              title: Text(question.question),
+              subtitle: Text(matchedAnswer), // Show the answer as a subtitle
+              onTap: () {
+                close(context, null); // Close the search first
+                Future.delayed(Duration.zero, () {
+                  // Navigate after the search is closed
+                  onEditQuestion(questions, question.setName, originalIndex);
+                });
+              },
+            );
+          },
+        );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+final filteredQuestions = questions
+      .where((question) =>
+          question.question.toLowerCase().contains(query.toLowerCase()) || // Match in question
+          question.answers.any((answer) => answer.toLowerCase().contains(query.toLowerCase()))) // Match in any answer
+      .toList();
+
+  return filteredQuestions.isEmpty
+      ? const Center(
+          child: Text(
+            'No matching questions or answers found.',
+            style: TextStyle(fontSize: 16.0),
+          ),
+        )
+      : ListView.builder(
+          itemCount: filteredQuestions.length,
+          itemBuilder: (context, index) {
+            final question = filteredQuestions[index];
+            final originalIndex = questions.indexOf(question);
+            final matchedAnswer = question.answers
+                .firstWhere((answer) => answer.toLowerCase().contains(query.toLowerCase()), orElse: () => question.correctAnswer);
+            return ListTile(
+              title: Text(question.question),
+              subtitle: Text(matchedAnswer), // Show the answer as a subtitle
+              onTap: () {
+                close(context, null); // Close the search first
+                Future.delayed(Duration.zero, () {
+                  // Navigate after the search is closed
+                  onEditQuestion(questions, question.setName, originalIndex);
+                });
+              },
+            );
+          },
+        );
   }
 }
