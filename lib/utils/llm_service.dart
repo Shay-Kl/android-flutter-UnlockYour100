@@ -57,6 +57,10 @@ class QuestionGenerator {
       Don't use the same answer twice in the same question.
       Don't repeat information found in the question in the answers.
       Always output questions and answers in English. No matter what language the input is in.
+
+      When writing questions with LaTeX formulas, encapsulate the LaTeX parts with "\$" signs on both sides. 
+      Use only one backslash in LaTeX formulas (e.g., use `\\int` instead of `\\\\int`). 
+      If LaTeX needs to be mixed with regular text, ensure the LaTeX is seamlessly included in the flow of the text.
       """);
   static final questionsSchema = Schema.object(
     properties: {

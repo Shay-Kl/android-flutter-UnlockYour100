@@ -4,7 +4,9 @@ import '../providers/set_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/colors.dart';
 import 'package:confetti/confetti.dart';
-import 'package:audioplayers/audioplayers.dart';
+//import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
+
 //import '../providers/theme_provider.dart';
 //import '../models/set.dart';
 
@@ -15,7 +17,7 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  AudioPlayer _audioPlayer = AudioPlayer();
+  //AudioPlayer _audioPlayer = AudioPlayer();
   late ConfettiController _controllerBottomCenter;
   int currentIndex = 0;
   String? selectedAnswer;
@@ -49,9 +51,11 @@ class _QuizScreenState extends State<QuizScreen> {
     return list1.every((q1) => list2.contains(q1));
   }
 
-  void playSound() async {
-    await _audioPlayer.play(AssetSource('ding.mp3'));
-  }
+
+  //TODO: decide about sound
+  // void playSound() async {
+  //   await _audioPlayer.play(AssetSource('ding.mp3'));
+  // }
 
   @override
   void initState() {
@@ -138,22 +142,11 @@ class _QuizScreenState extends State<QuizScreen> {
                         mainAxisSize: MainAxisSize
                             .min, // Ensures the column takes minimal vertical space
                         children: [
-                          Text(
-                            question!.question,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: setProvider
-                                  .getSetByName(question!.setName)
-                                  .selectedColorKey
-                                  .getTextColorFromScheme(
-                                      Theme.of(context).colorScheme),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                          MixedTextWidget(text: question!.question, color: setProvider.getSetByName(question!.setName).selectedColorKey.getTextColorFromScheme(Theme.of(context).colorScheme), fontWeight: FontWeight.bold, fontSize: 20),
                           const SizedBox(
                               height:
                                   8), // Spacer between the question and setName
+                          
                           Text(
                             question!.setName, // Display the setName here
                             style: TextStyle(
@@ -169,6 +162,7 @@ class _QuizScreenState extends State<QuizScreen> {
                           const SizedBox(
                               height:
                                   8), // Spacer between the question and setName
+                                  
                           Text(
                             '${currentIndex+1}/${questions.length}', // Display the setName here
                             style: TextStyle(
@@ -219,14 +213,8 @@ class _QuizScreenState extends State<QuizScreen> {
                           onTap: null,
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
-                            child: Text(
-                              question!.explanation,
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: colorScheme.onSurface,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+                            child: 
+                            MixedTextWidget(text: question!.explanation, color: colorScheme.onSurface, fontWeight: null, fontSize: 18),
                           ),
                         ),
                       ),
@@ -251,14 +239,8 @@ class _QuizScreenState extends State<QuizScreen> {
                           onTap: null,
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
-                            child: Text(
-                              question!.correctAnswer,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                color: Color.fromARGB(255, 255, 255, 255),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+                            child: 
+                            MixedTextWidget(text: question!.correctAnswer, color: const Color.fromARGB(255, 255, 255, 255), fontWeight: null, fontSize: 18),
                           ),
                         ),
                       ),
@@ -283,14 +265,8 @@ class _QuizScreenState extends State<QuizScreen> {
                           onTap: null,
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
-                            child: Text(
-                              selectedAnswer!,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                color: Color.fromARGB(255, 255, 255, 255),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+                            child: 
+                            MixedTextWidget(text: selectedAnswer!, color: const Color.fromARGB(255, 255, 255, 255), fontWeight: null, fontSize: 18),
                           ),
                         ),
                       ),
@@ -334,7 +310,7 @@ class _QuizScreenState extends State<QuizScreen> {
                                     hasAnswered = true;
                                     if (answer == question!.correctAnswer) {
                                       _controllerBottomCenter.play();
-                                      playSound();
+                                      //playSound();
                                     }
                                     setProvider.updateQuestionSuccessRate(
                                         question!,
@@ -350,17 +326,8 @@ class _QuizScreenState extends State<QuizScreen> {
                               : null,
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
-                            child: Text(
-                              answer,
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: (isSelected ||
-                                        (isCorrect && selectedAnswer != null))
-                                    ? const Color.fromARGB(255, 255, 255, 255)
-                                    : colorScheme.onSurface,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+                            child: 
+                            MixedTextWidget(text: answer, color: (isSelected ||(isCorrect && selectedAnswer != null))? const Color.fromARGB(255, 255, 255, 255): colorScheme.onSurface, fontWeight: null, fontSize: 18),
                           ),
                         ),
                       ),
@@ -405,6 +372,89 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class MixedTextWidget extends StatelessWidget {
+  final String text;
+  final Color color;
+  final FontWeight? fontWeight;
+  final double fontSize;
+
+  const MixedTextWidget({super.key, required this.text, required this.color, required this.fontWeight, required this.fontSize});
+
+  List<String> parseText(String text) {
+  List<String> parts = [];
+  bool insideLatex = false;  // To track if we're inside a LaTeX block
+  String currentPart = '';   // To build the current part (text or LaTeX)
+
+  for (int i = 0; i < text.length; i++) {
+    // Check for the $ sign to toggle LaTeX block
+    if (text[i] == r'$') {
+      // If we're already inside LaTeX, end the LaTeX part
+      if (insideLatex) {
+        currentPart += text[i];  // Add the closing $
+        parts.add(currentPart);
+        currentPart = '';  // Reset current part
+      } else {
+        // We're entering a LaTeX part
+        if (currentPart.isNotEmpty) {
+          parts.add(currentPart);  // Add any regular text encountered before this LaTeX part
+          currentPart = '';  // Reset current part
+        }
+        currentPart += text[i];  // Add the opening $
+      }
+      insideLatex = !insideLatex;  // Toggle the insideLatex flag
+    } else {
+      currentPart += text[i];  // Add characters to the current part
+    }
+  }
+
+  if (currentPart.isNotEmpty) {
+    parts.add(currentPart);  // Add any remaining part (either regular text or LaTeX)
+  }
+
+  return parts;
+}
+
+  @override
+  Widget build(BuildContext context) {
+
+    final List<String> parts = parseText(text);
+    // Split the text by a delimiter (e.g., "$") to separate LaTeX from regular text
+    final List<InlineSpan> children = [];
+
+    for (int i = 0; i < parts.length; i++) {
+      debugPrint(parts[i]);
+    }
+    // Loop through the parts, adding Text or Math.tex as needed
+    for (int i = 0; i < parts.length; i++) {
+      if (parts[i].startsWith(r'$') && parts[i].endsWith(r'$')) {
+        String latex = parts[i].substring(1, parts[i].length - 1);
+        children.add(WidgetSpan(
+          alignment: PlaceholderAlignment.baseline,
+          baseline: TextBaseline.alphabetic,
+          child: Math.tex(
+          latex,
+          textStyle: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: color),
+        )));
+      } else {
+        children.add(TextSpan(
+          text: parts[i], // Wrap LaTeX content with $ signs
+          style: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: color),
+          //textAlign: TextAlign.center,
+        ));
+      }
+    }
+    return RichText(
+      text: TextSpan(children: children),
+      textAlign: TextAlign.center,
+      textHeightBehavior: const TextHeightBehavior(
+        applyHeightToFirstAscent: false,
+        applyHeightToLastDescent: false,
+        
+    ),
     );
   }
 }
