@@ -90,10 +90,36 @@ class _QuizScreenState extends State<QuizScreen> {
                 ),
               ),
             )
-          : SingleChildScrollView(
-              padding:
-                  const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
-              child: _buildQuizCards(),
+          : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildQuestionCard(),
+                  const SizedBox(height: 6),
+                  Expanded(
+                    child: Center(
+                      child: SingleChildScrollView(
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.85,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              ...shuffledAnswers
+                                  .map((answer) => _buildAnswerCard(answer)),
+                              if (hasAnswered && question?.explanation != "")
+                                _buildExplanationCard(question!.explanation),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
             ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
@@ -104,37 +130,6 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildQuizCards() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildQuestionCard(),
-        const SizedBox(height: 16), // Spacer
-        /*Align(
-          alignment: Alignment.bottomCenter,
-          child: ConfettiWidget(
-            confettiController: _controllerBottomCenter,
-            blastDirectionality: BlastDirectionality.explosive,
-            emissionFrequency: 0.5,
-            colors: const [
-              Colors.green,
-              Colors.red,
-              Colors.yellow,
-              Colors.purpleAccent
-            ],
-            numberOfParticles: 20,
-          ),
-        ),
-*/
-        ...shuffledAnswers.map((answer) => _buildAnswerCard(answer)),
-        (hasAnswered)
-            ? _buildAnswerCard(question?.explanation ?? "")
-            : const SizedBox.shrink(),
-      ],
     );
   }
 
@@ -209,12 +204,15 @@ class _QuizScreenState extends State<QuizScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     final isCorrect = text == question!.correctAnswer;
-    final isSelected = selectedAnswer == text;
-    final isHighlighted = ((isCorrect && hasAnswered) || isSelected);
+    final isHighlighted =
+        ((isCorrect && hasAnswered) || selectedAnswer == text);
+    final isRelevant = isHighlighted || !hasAnswered;
 
     return AnimatedContainer(
-      margin: EdgeInsets.symmetric(vertical: (isHighlighted) ? 4 : 8),
-      duration: const Duration(milliseconds: 100),
+      curve: Curves.easeInOut,
+      height: isRelevant ? null : 0,
+      margin: EdgeInsets.symmetric(vertical: (isRelevant) ? 8 : 0),
+      duration: const Duration(milliseconds: 150),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -224,18 +222,39 @@ class _QuizScreenState extends State<QuizScreen> {
           width: isHighlighted ? 6 : 2,
         ),
       ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => (hasAnswered) ? null : _handleAnswerPress(text),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: MixedText(
-                  text: text,
-                  color: colorScheme.onSurface,
-                  fontWeight: null,
-                  fontSize: 18),
-            ),
-          ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => (hasAnswered) ? null : _handleAnswerPress(text),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: MixedText(
+              text: text,
+              color: colorScheme.onSurface,
+              fontWeight: null,
+              fontSize: 18),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExplanationCard(String text) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          width: 2,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: MixedText(
+            text: text,
+            color: colorScheme.onSurface,
+            fontWeight: null,
+            fontSize: 18),
+      ),
     );
   }
 
