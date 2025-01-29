@@ -5,6 +5,7 @@ import '../providers/set_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/colors.dart';
 import 'package:confetti/confetti.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -14,6 +15,7 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   late ConfettiController _controllerBottomCenter;
+  final AudioPlayer _audioPlayer = AudioPlayer();
   int currentIndex = 0;
   String? selectedAnswer;
   List<Question> questions = [];
@@ -79,48 +81,75 @@ class _QuizScreenState extends State<QuizScreen> {
       appBar: AppBar(
         title: const Text("UnlockYour100"),
       ),
-      body: questions.isEmpty
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'No questions available. Please activate an existing set with questions or create a new one and add questions to it to continue.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16.0),
-                ),
-              ),
-            )
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  _buildQuestionCard(),
-                  const SizedBox(height: 6),
-                  Expanded(
-                    child: Center(
-                      child: SingleChildScrollView(
-                        child: SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.85,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              ...shuffledAnswers
-                                  .map((answer) => _buildAnswerCard(answer)),
-                              if (hasAnswered && question?.explanation != "")
-                                _buildExplanationCard(question!.explanation),
-                            ],
+      body: Stack(
+        children: [
+          questions.isEmpty
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'No questions available. Please activate an existing set with questions or create a new one and add questions to it to continue.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16.0),
+                    ),
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 20),
+                      _buildQuestionCard(),
+                      const SizedBox(height: 6),
+                      Expanded(
+                        child: Center(
+                          child: SingleChildScrollView(
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.85,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  ...shuffledAnswers
+                                      .map((answer) => _buildAnswerCard(answer)),
+                                  if (hasAnswered &&
+                                      question?.explanation != "")
+                                    _buildExplanationCard(
+                                        question!.explanation),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  )
-                ],
-              ),
+                      )
+                    ],
+                  ),
+                ),
+          Align(
+            alignment: Alignment.center,
+            child: ConfettiWidget(
+              // make it blast down
+              numberOfParticles: 5,
+              emissionFrequency: 0.01,
+              minBlastForce: 10,
+              maxBlastForce: 50,
+              blastDirectionality: BlastDirectionality.explosive,
+              gravity: 1,
+              pauseEmissionOnLowFrameRate: true,
+              colors: const [
+                Colors.green,
+                Colors.blue,
+                Colors.pink,
+                Colors.orange,
+                Colors.purple
+              ],
+              confettiController: _controllerBottomCenter,
             ),
+          ),
+        ],
+      ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         child: FilledButton(
@@ -137,15 +166,13 @@ class _QuizScreenState extends State<QuizScreen> {
     final setProvider = Provider.of<SetProvider>(context);
     return Card.outlined(
       shape: RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.circular(12.0), // Optional, for rounded corners
+        borderRadius: BorderRadius.circular(12.0),
         side: BorderSide(
           color: setProvider
               .getSetByName(question!.setName)
               .selectedColorKey
-              .getBorderColorFromScheme(
-                  Theme.of(context).colorScheme), // Border color
-          width: 1.0, // Border width
+              .getBorderColorFromScheme(Theme.of(context).colorScheme),
+          width: 1.0,
         ),
       ),
       color: setProvider
@@ -155,8 +182,7 @@ class _QuizScreenState extends State<QuizScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisSize: MainAxisSize
-              .min, // Ensures the column takes minimal vertical space
+          mainAxisSize: MainAxisSize.min,
           children: [
             MixedText(
                 text: question!.question,
@@ -166,11 +192,9 @@ class _QuizScreenState extends State<QuizScreen> {
                     .getTextColorFromScheme(Theme.of(context).colorScheme),
                 fontWeight: FontWeight.bold,
                 fontSize: 20),
-            const SizedBox(
-                height: 8), // Spacer between the question and setName
-
+            const SizedBox(height: 8),
             Text(
-              question!.setName, // Display the setName here
+              question!.setName,
               style: TextStyle(
                 fontSize: 14,
                 color: setProvider
@@ -180,11 +204,9 @@ class _QuizScreenState extends State<QuizScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(
-                height: 8), // Spacer between the question and setName
-
+            const SizedBox(height: 8),
             Text(
-              '${currentIndex + 1}/${questions.length}', // Display the setName here
+              '${currentIndex + 1}/${questions.length}',
               style: TextStyle(
                 fontSize: 14,
                 color: setProvider
@@ -267,8 +289,7 @@ class _QuizScreenState extends State<QuizScreen> {
       });
       if (text == question!.correctAnswer) {
         _controllerBottomCenter.play();
-      }
-      if (text == question!.correctAnswer) {
+        _audioPlayer.play(AssetSource('correct.mp3'));
         question!.correctAnswers = question!.correctAnswers + 1;
       }
       question!.totalAnswers = question!.totalAnswers + 1;
