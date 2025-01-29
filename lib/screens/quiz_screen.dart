@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:project/widgets/mixed_text.dart';
 import '../models/question.dart';
 import '../providers/set_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/colors.dart';
 import 'package:confetti/confetti.dart';
-//import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter_math_fork/flutter_math.dart';
-
-//import '../providers/theme_provider.dart';
-//import '../models/set.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -17,8 +14,8 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  //AudioPlayer _audioPlayer = AudioPlayer();
   late ConfettiController _controllerBottomCenter;
+  final AudioPlayer _audioPlayer = AudioPlayer();
   int currentIndex = 0;
   String? selectedAnswer;
   List<Question> questions = [];
@@ -51,12 +48,6 @@ class _QuizScreenState extends State<QuizScreen> {
     return list1.every((q1) => list2.contains(q1));
   }
 
-
-  //TODO: decide about sound
-  // void playSound() async {
-  //   await _audioPlayer.play(AssetSource('ding.mp3'));
-  // }
-
   @override
   void initState() {
     super.initState();
@@ -72,22 +63,12 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    //final themeProvider = Provider.of<ThemeProvider>(context);
     final setProvider = Provider.of<SetProvider>(context);
     if (setStateChange == false) {
       List<Question> questions = _fetchActiveQuestions(setProvider);
       if (!areListsEqual(questions, this.questions)) {
         this.questions = questions;
         questions.shuffle();
-        /*
-        questions.sort((a, b) {
-          final ratioA =
-              a.totalAnswers == 0 ? 0 : a.correctAnswers / a.totalAnswers;
-          final ratioB =
-              b.totalAnswers == 0 ? 0 : b.correctAnswers / b.totalAnswers;
-          return ratioA.compareTo(ratioB);
-        });
-        */
         currentIndex = 0;
         question = questions.isNotEmpty ? questions[currentIndex] : null;
         shuffledAnswers = question?.getShuffledAnswers() ?? [];
@@ -96,365 +77,239 @@ class _QuizScreenState extends State<QuizScreen> {
       }
     }
     setStateChange = false;
-    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text("UnlockYour100"),
       ),
-      body: questions.isEmpty
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'No questions available. Please activate an existing set with questions or create a new one and add questions to it to continue.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16.0),
+      body: Stack(
+        children: [
+          questions.isEmpty
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'No questions available. Please activate an existing set with questions or create a new one and add questions to it to continue.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16.0),
+                    ),
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 20),
+                      _buildQuestionCard(),
+                      const SizedBox(height: 6),
+                      Expanded(
+                        child: Center(
+                          child: SingleChildScrollView(
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.85,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  ...shuffledAnswers
+                                      .map((answer) => _buildAnswerCard(answer)),
+                                  if (hasAnswered &&
+                                      question?.explanation != "")
+                                    _buildExplanationCard(
+                                        question!.explanation),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
                 ),
-              ),
-            )
-          : SingleChildScrollView(
-              padding:
-                  const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Card.outlined(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                          8.0), // Optional, for rounded corners
-                      side: BorderSide(
-                        color: setProvider
-                            .getSetByName(question!.setName)
-                            .selectedColorKey
-                            .getBorderColorFromScheme(
-                                Theme.of(context).colorScheme), // Border color
-                        width: 1.0, // Border width
-                      ),
-                    ),
-                    color: setProvider
-                        .getSetByName(question!.setName)
-                        .selectedColorKey
-                        .getColorFromScheme(Theme.of(context).colorScheme),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize
-                            .min, // Ensures the column takes minimal vertical space
-                        children: [
-                          MixedTextWidget(text: question!.question, color: setProvider.getSetByName(question!.setName).selectedColorKey.getTextColorFromScheme(Theme.of(context).colorScheme), fontWeight: FontWeight.bold, fontSize: 20),
-                          const SizedBox(
-                              height:
-                                  8), // Spacer between the question and setName
-                          
-                          Text(
-                            question!.setName, // Display the setName here
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: setProvider
-                                  .getSetByName(question!.setName)
-                                  .selectedColorKey
-                                  .getTextColorFromScheme(
-                                      Theme.of(context).colorScheme),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(
-                              height:
-                                  8), // Spacer between the question and setName
-                                  
-                          Text(
-                            '${currentIndex+1}/${questions.length}', // Display the setName here
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: setProvider
-                                  .getSetByName(question!.setName)
-                                  .selectedColorKey
-                                  .getTextColorFromScheme(
-                                      Theme.of(context).colorScheme),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16), // Spacer
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: ConfettiWidget(
-                      confettiController: _controllerBottomCenter,
-                      blastDirectionality: BlastDirectionality.explosive,
-                      emissionFrequency: 0.5,
-                      colors: const [Colors.green, Colors.red, Colors.yellow, Colors.purpleAccent],
-                      numberOfParticles: 20,
-                    ),
-                  ),
-                  if (hasAnswered) ...[
-                    //final isCorrect = answer == question!.correctAnswer;
-                    //final isSelected = selectedAnswer == answer;
-                    if (question!.explanation.isNotEmpty) ...[
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 0),
-                      curve: Curves.fastOutSlowIn,
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.outline,
-                          width: 1,
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: null,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: 
-                            MixedTextWidget(text: question!.explanation, color: colorScheme.onSurface, fontWeight: null, fontSize: 18),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  AnimatedContainer(
-                      duration: const Duration(milliseconds: 0),
-                      curve: Curves.fastOutSlowIn,
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade900,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.outline,
-                          width: 1,
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: null,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: 
-                            MixedTextWidget(text: question!.correctAnswer, color: const Color.fromARGB(255, 255, 255, 255), fontWeight: null, fontSize: 18),
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (question!.correctAnswer != selectedAnswer) ...[
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 0),
-                      curve: Curves.fastOutSlowIn,
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade900,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.outline,
-                          width: 1,
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: null,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: 
-                            MixedTextWidget(text: selectedAnswer!, color: const Color.fromARGB(255, 255, 255, 255), fontWeight: null, fontSize: 18),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  ]
-                  else ...[
-                  // Answer cards
-                  ...shuffledAnswers.map((answer) {
-                    final isCorrect = answer == question!.correctAnswer;
-                    final isSelected = selectedAnswer == answer;
-                    return AnimatedContainer(
-                      duration: isSelected
-                          ? const Duration(milliseconds: 0)
-                          : const Duration(milliseconds: 0),
-                      curve: Curves.fastOutSlowIn,
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? (isCorrect
-                                ? Colors.green.shade900
-                                : Colors.red.shade900)
-                            : (isCorrect && selectedAnswer != null
-                                ? Colors.green.shade900
-                                : colorScheme.surfaceContainer),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.outline,
-                          width: 1,
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: selectedAnswer == null
-                              ? () {
-                                  setState(() {
-                                    setStateChange = true;
-                                    selectedAnswer = answer;
-                                    hasAnswered = true;
-                                    if (answer == question!.correctAnswer) {
-                                      _controllerBottomCenter.play();
-                                      //playSound();
-                                    }
-                                    setProvider.updateQuestionSuccessRate(
-                                        question!,
-                                        answer == question!.correctAnswer);
-                                    if (answer == question!.correctAnswer) {
-                                      question!.correctAnswers =
-                                          question!.correctAnswers + 1;
-                                    }
-                                    question!.totalAnswers =
-                                        question!.totalAnswers + 1;
-                                  });
-                                }
-                              : null,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: 
-                            MixedTextWidget(text: answer, color: (isSelected ||(isCorrect && selectedAnswer != null))? const Color.fromARGB(255, 255, 255, 255): colorScheme.onSurface, fontWeight: null, fontSize: 18),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                  ],
-                ],
-              )),
+          Align(
+            alignment: Alignment.center,
+            child: ConfettiWidget(
+              // make it blast down
+              numberOfParticles: 5,
+              emissionFrequency: 0.01,
+              minBlastForce: 10,
+              maxBlastForce: 50,
+              blastDirectionality: BlastDirectionality.explosive,
+              gravity: 1,
+              pauseEmissionOnLowFrameRate: true,
+              colors: const [
+                Colors.green,
+                Colors.blue,
+                Colors.pink,
+                Colors.orange,
+                Colors.purple
+              ],
+              confettiController: _controllerBottomCenter,
+            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         child: FilledButton(
-          style: TextButton.styleFrom(
-            backgroundColor: hasAnswered
-                ? colorScheme.primary
-                : colorScheme.surfaceContainer,
-          ),
-          onPressed: () {
-            setState(() {
-              if (hasAnswered) {
-                setStateChange = true;
-                if (currentIndex != questions.length - 1) {
-                  currentIndex = currentIndex + 1;
-                } else {
-                  currentIndex = 0;
-                  //ScaffoldMessenger.of(context).showSnackBar(
-                  //    const SnackBar(content: Text("No more questions!")),
-                  //);
-                }
-                selectedAnswer = null;
-                hasAnswered = false;
-                question = questions[currentIndex];
-                shuffledAnswers = question!.getShuffledAnswers();
-              }
-            });
-          },
-          child: Text(
+          onPressed: hasAnswered ? _handleNextQuestionPress : null,
+          child: const Text(
             'Next Question',
-            style: TextStyle(
-                color: hasAnswered
-                    ? colorScheme.onPrimary
-                    : colorScheme.onSurface),
           ),
         ),
       ),
     );
   }
-}
 
-class MixedTextWidget extends StatelessWidget {
-  final String text;
-  final Color color;
-  final FontWeight? fontWeight;
-  final double fontSize;
-
-  const MixedTextWidget({super.key, required this.text, required this.color, required this.fontWeight, required this.fontSize});
-
-  List<String> parseText(String text) {
-  List<String> parts = [];
-  bool insideLatex = false;  // To track if we're inside a LaTeX block
-  String currentPart = '';   // To build the current part (text or LaTeX)
-
-  for (int i = 0; i < text.length; i++) {
-    // Check for the $ sign to toggle LaTeX block
-    if (text[i] == r'$') {
-      // If we're already inside LaTeX, end the LaTeX part
-      if (insideLatex) {
-        currentPart += text[i];  // Add the closing $
-        parts.add(currentPart);
-        currentPart = '';  // Reset current part
-      } else {
-        // We're entering a LaTeX part
-        if (currentPart.isNotEmpty) {
-          parts.add(currentPart);  // Add any regular text encountered before this LaTeX part
-          currentPart = '';  // Reset current part
-        }
-        currentPart += text[i];  // Add the opening $
-      }
-      insideLatex = !insideLatex;  // Toggle the insideLatex flag
-    } else {
-      currentPart += text[i];  // Add characters to the current part
-    }
-  }
-
-  if (currentPart.isNotEmpty) {
-    parts.add(currentPart);  // Add any remaining part (either regular text or LaTeX)
-  }
-
-  return parts;
-}
-
-  @override
-  Widget build(BuildContext context) {
-
-    final List<String> parts = parseText(text);
-    // Split the text by a delimiter (e.g., "$") to separate LaTeX from regular text
-    final List<InlineSpan> children = [];
-
-    for (int i = 0; i < parts.length; i++) {
-      debugPrint(parts[i]);
-    }
-    // Loop through the parts, adding Text or Math.tex as needed
-    for (int i = 0; i < parts.length; i++) {
-      if (parts[i].startsWith(r'$') && parts[i].endsWith(r'$')) {
-        String latex = parts[i].substring(1, parts[i].length - 1);
-        children.add(WidgetSpan(
-          alignment: PlaceholderAlignment.baseline,
-          baseline: TextBaseline.alphabetic,
-          child: Math.tex(
-          latex,
-          textStyle: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: color),
-        )));
-      } else {
-        children.add(TextSpan(
-          text: parts[i], // Wrap LaTeX content with $ signs
-          style: TextStyle(fontSize: fontSize, fontWeight: fontWeight, color: color),
-          //textAlign: TextAlign.center,
-        ));
-      }
-    }
-    return RichText(
-      text: TextSpan(children: children),
-      textAlign: TextAlign.center,
-      textHeightBehavior: const TextHeightBehavior(
-        applyHeightToFirstAscent: false,
-        applyHeightToLastDescent: false,
-        
-    ),
+  Widget _buildQuestionCard() {
+    final setProvider = Provider.of<SetProvider>(context);
+    return Card.outlined(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        side: BorderSide(
+          color: setProvider
+              .getSetByName(question!.setName)
+              .selectedColorKey
+              .getBorderColorFromScheme(Theme.of(context).colorScheme),
+          width: 1.0,
+        ),
+      ),
+      color: setProvider
+          .getSetByName(question!.setName)
+          .selectedColorKey
+          .getColorFromScheme(Theme.of(context).colorScheme),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MixedText(
+                text: question!.question,
+                color: setProvider
+                    .getSetByName(question!.setName)
+                    .selectedColorKey
+                    .getTextColorFromScheme(Theme.of(context).colorScheme),
+                fontWeight: FontWeight.bold,
+                fontSize: 20),
+            const SizedBox(height: 8),
+            Text(
+              question!.setName,
+              style: TextStyle(
+                fontSize: 14,
+                color: setProvider
+                    .getSetByName(question!.setName)
+                    .selectedColorKey
+                    .getTextColorFromScheme(Theme.of(context).colorScheme),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${currentIndex + 1}/${questions.length}',
+              style: TextStyle(
+                fontSize: 14,
+                color: setProvider
+                    .getSetByName(question!.setName)
+                    .selectedColorKey
+                    .getTextColorFromScheme(Theme.of(context).colorScheme),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  Widget _buildAnswerCard(String text) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final isCorrect = text == question!.correctAnswer;
+    final isHighlighted =
+        ((isCorrect && hasAnswered) || selectedAnswer == text);
+    final isRelevant = isHighlighted || !hasAnswered;
+
+    return AnimatedContainer(
+      curve: Curves.easeInOut,
+      height: isRelevant ? null : 0,
+      margin: EdgeInsets.symmetric(vertical: (isRelevant) ? 8 : 0),
+      duration: const Duration(milliseconds: 150),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isHighlighted
+              ? (isCorrect ? Colors.green.shade900 : Colors.red.shade900)
+              : colorScheme.onSurface,
+          width: isHighlighted ? 6 : 2,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => (hasAnswered) ? null : _handleAnswerPress(text),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: MixedText(
+              text: text,
+              color: colorScheme.onSurface,
+              fontWeight: null,
+              fontSize: 18),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExplanationCard(String text) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          width: 2,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: MixedText(
+            text: text,
+            color: colorScheme.onSurface,
+            fontWeight: null,
+            fontSize: 18),
+      ),
+    );
+  }
+
+  _handleAnswerPress(String text) {
+    {
+      setState(() {
+        setStateChange = true;
+        selectedAnswer = text;
+        hasAnswered = true;
+      });
+      if (text == question!.correctAnswer) {
+        _controllerBottomCenter.play();
+        _audioPlayer.play(AssetSource('correct.mp3'));
+        question!.correctAnswers = question!.correctAnswers + 1;
+      }
+      question!.totalAnswers = question!.totalAnswers + 1;
+    }
+  }
+
+  _handleNextQuestionPress() {
+    {
+      setState(() {
+        setStateChange = true;
+        if (currentIndex != questions.length - 1) {
+          currentIndex = currentIndex + 1;
+        } else {
+          currentIndex = 0;
+        }
+        selectedAnswer = null;
+        hasAnswered = false;
+        question = questions[currentIndex];
+        shuffledAnswers = question!.getShuffledAnswers();
+      });
+    }
   }
 }
