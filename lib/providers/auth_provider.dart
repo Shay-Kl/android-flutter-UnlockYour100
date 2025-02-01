@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-// import settings manager
 import '../utils/settings_manager.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -25,6 +24,20 @@ class AuthProvider extends ChangeNotifier {
     // call settings manager to load user settings
     SettingsManager.instance.load(user?.email ?? '');
     notifyListeners();
+  }
+
+  Future<GoogleSignInAccount?> autoSignIn() async {
+    try {
+      final googleSignIn = GoogleSignIn();
+      final account = await googleSignIn.signInSilently();
+      if(account != null) {
+        setUser(account);
+      }
+      return account;
+    } catch (error) {
+      debugPrint('Auto Sign-In error: $error');
+      return null;
+    }
   }
 
   Future<void> signOut(BuildContext context) async {
