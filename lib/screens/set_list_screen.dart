@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:project/screens/question_list_screen.dart';
-import '../models/set.dart';
 import 'package:provider/provider.dart';
 import '../providers/set_provider.dart';
 //import '../providers/theme_provider.dart';
@@ -105,17 +104,17 @@ class _SetListScreenState extends State<SetListScreen> {
     );
   }
 
-  double _calculateSuccessRate(QuestionSet s) {
-    int totalCorrect = 0;
-    int totalAnswers = 0;
+  // double _calculateSuccessRate(QuestionSet s) {
+  //   int totalCorrect = 0;
+  //   int totalAnswers = 0;
 
-    for (var question in s.questions) {
-      totalCorrect += question.correctAnswers;
-      totalAnswers += question.totalAnswers;
-    }
+  //   for (var question in s.questions) {
+  //     totalCorrect += question.correctAnswers;
+  //     totalAnswers += question.totalAnswers;
+  //   }
 
-    return totalAnswers == 0 ? 0.0 : totalCorrect / totalAnswers;
-  }
+  //   return totalAnswers == 0 ? 0.0 : totalCorrect / totalAnswers;
+  // }
 
   @override
   Widget build(BuildContext context) {

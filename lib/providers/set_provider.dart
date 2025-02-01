@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../models/set.dart';
 import '../models/question.dart';
 import '../models/colors.dart';
+import 'package:intl/intl.dart';
+import 'dart:async';
+
 
 class SetProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -10,13 +13,17 @@ class SetProvider extends ChangeNotifier {
   late CollectionReference<Map<String, dynamic>>  _setCollection;
   List<QuestionSet> _sets = [];
   List<QuestionSet> get sets => _sets;
-  
+  StreamSubscription? _firestoreSubscription;
+
   SetProvider(this.userEmail){
     if (userEmail.isNotEmpty) {
      _setCollection = _firestore.collection('users').doc(userEmail).collection('sets');
-      _fetchSets(); // Initialize local cache
-      _listenToFirestore();
     }
+  }
+
+  Future<void> initialize() async {
+    if (userEmail.isEmpty) return;
+    _listenToFirestore();
   }
 
   QuestionSet getSetByName(String setName) {
@@ -28,43 +35,145 @@ class SetProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _fetchSets() async {
-  try {
-    // Fetch all sets
-    final snapshot = await _setCollection.get();
-    final List<Future<QuestionSet>> setFutures = [];
+  void _listenToFirestore() {
+    try {
+    _firestoreSubscription =_setCollection.snapshots().listen((snapshot) async {
+        final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      
+      // Check if user logged in and answered questions today
+      final activityDocRef = _firestore
+          .collection('users')
+          .doc(userEmail)
+          .collection('activity')
+          .doc(today);
 
-    for (final doc in snapshot.docs) {
-      setFutures.add(_fetchSetWithQuestions(doc));
-    }
+      final activitySnapshot = await activityDocRef.get();
+      bool answeredQuestionsToday = false;
+      
+      if (activitySnapshot.exists) {
+        final data = activitySnapshot.data() as Map<String, dynamic>;
+        answeredQuestionsToday = (data['answeredQuestions'] ?? 0) > 0;
+      }
 
-    // Wait for all sets to be fetched concurrently
-    final fetchedSets = await Future.wait(setFutures);
+      final List<Future<QuestionSet>> setFutures = [];
+      final batch = _firestore.batch();
 
-    // Update state
-    if (!_areSetsEqual(_sets, fetchedSets)) {
-      _sets = fetchedSets;
+      for (final doc in snapshot.docs) {
+        setFutures.add(_fetchSetWithQuestions(doc, resetAnswers: !answeredQuestionsToday));
+
+        // Fetch questions for this set
+        final questionsSnapshot =
+            await doc.reference.collection('questions').get();
+
+        for (final questionDoc in questionsSnapshot.docs) {
+          final question = Question.fromDocument(questionDoc);
+
+          if (!answeredQuestionsToday && question.answeredToday > 0) {
+            // Reset answeredToday field
+            question.answeredToday = 0;
+
+            batch.update(questionDoc.reference, {
+              'answeredToday': question.answeredToday,
+            });
+          }
+        }
+      }
+      // Wait for all QuestionSets to be fetched concurrently
+      final updatedSets = await Future.wait(setFutures);
+      await batch.commit();
+      // Update state
+      if (!_areSetsEqual(_sets, updatedSets)) {
+      _sets = updatedSets;
       notifyListeners();
     }
+    });
   } catch (e) {
-    debugPrint("fetchSets: Error fetching sets: $e");
+    debugPrint("listenToFirestore: Error reading set: $e");
     _sets = [];
   }
 }
 
-Future<QuestionSet> _fetchSetWithQuestions(QueryDocumentSnapshot doc) async {
+@override
+  void dispose() {
+    _firestoreSubscription?.cancel(); // Cancel listener on logout
+    super.dispose();
+  }
+
+//   Future<void> _fetchSets() async {
+//   try {
+
+//     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    
+//     // Check if user logged in and answered questions today
+//     final activityDocRef = _firestore
+//         .collection('users')
+//         .doc(userEmail)
+//         .collection('activity')
+//         .doc(today);
+
+//     final activitySnapshot = await activityDocRef.get();
+//     bool answeredQuestionsToday = false;
+
+//     if (activitySnapshot.exists) {
+//       final data = activitySnapshot.data() as Map<String, dynamic>;
+//       answeredQuestionsToday = (data['answeredQuestions'] ?? 0) > 0;
+//     }
+
+//     // Fetch all sets
+//     final snapshot = await _setCollection.get();
+//     final List<Future<QuestionSet>> setFutures = [];
+//     final batch = _firestore.batch();
+
+//     for (final doc in snapshot.docs) {
+//       setFutures.add(_fetchSetWithQuestions(doc, resetAnswers: !answeredQuestionsToday));
+
+//       // Fetch questions for this set
+//       final questionsSnapshot =
+//           await doc.reference.collection('questions').get();
+
+//       for (final questionDoc in questionsSnapshot.docs) {
+//         final question = Question.fromDocument(questionDoc);
+
+//         if (!answeredQuestionsToday || question.answeredToday > 0) {
+//           // Reset answeredToday field
+//           question.answeredToday = 0;
+
+//           batch.update(questionDoc.reference, {
+//             'answeredToday': question.answeredToday,
+//           });
+//         }
+//       }
+//     }
+
+//     // Wait for all sets to be fetched concurrently
+//     final fetchedSets = await Future.wait(setFutures);
+//     await batch.commit();
+//     // Update state
+//     if (!_areSetsEqual(_sets, fetchedSets)) {
+//       _sets = fetchedSets;
+//       notifyListeners();
+//     }
+//   } catch (e) {
+//     debugPrint("fetchSets: Error fetching sets: $e");
+//     _sets = [];
+//   }
+// }
+
+Future<QuestionSet> _fetchSetWithQuestions(DocumentSnapshot doc, {bool resetAnswers = false}) async {
   try {
     final data = doc.data() as Map<String, dynamic>;
     // Fetch questions for this set
-    final questionsSnap = await _setCollection
-        .doc(doc.id)
-        .collection('questions')
-        .get();
-    final List<Question> questionList = questionsSnap.docs
-        .map((qDoc) => Question.fromDocument(qDoc))
-        .toList();
+    final questionsSnapshot = await doc.reference.collection('questions').get();
+  
+  final questions = questionsSnapshot.docs.map((qDoc) {
+    final question = Question.fromDocument(qDoc);
+    if (resetAnswers) {
+      question.answeredToday = 0;
+    }
+    return question;
+  }).toList();
     // Create and return the QuestionSet
-    return QuestionSet.fromFirestore(data, questionList);
+    return QuestionSet.fromFirestore(data, questions);
   } catch (e) {
     debugPrint("fetchSetWithQuestions: Error fetching questions for set ${doc.id}: $e");
     return QuestionSet(
@@ -111,26 +220,7 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
   return true;
 }
 
-  void _listenToFirestore() {
-    try {
-    _setCollection.snapshots().listen((snapshot) async {
-      final List<Future<QuestionSet>> setFutures = [];
-      for (final doc in snapshot.docs) {
-      setFutures.add(_fetchSetWithQuestions(doc));
-    }
-      // Wait for all QuestionSets to be fetched concurrently
-      final updatedSets = await Future.wait(setFutures);
-      // Update state
-      if (!_areSetsEqual(_sets, updatedSets)) {
-      _sets = updatedSets;
-      notifyListeners();
-    }
-    });
-  } catch (e) {
-    debugPrint("listenToFirestore: Error reading set: $e");
-    _sets = [];
-  }
-}
+  
 
   Future<void> updateSetIsActive(String setName, bool isActive) async {
     try {
@@ -187,25 +277,51 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
         throw Exception("Set with name '${question.setName}' not found.");
       }
       setId = _sets[setIndex].id!;
-    // Update Firestore document for the question in the relevant set
-    await _setCollection.doc(setId).collection('questions').doc(question.id).update({
-      'correctAnswers': question.correctAnswers + (success ? 1 : 0),
-      'totalAnswers': question.totalAnswers + 1,
-    });
+      // Reference to today's activity document
+      final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final activityDocRef = _firestore
+          .collection('users')
+          .doc(userEmail)
+          .collection('activity')
+          .doc(today);
 
-    // After updating Firestore, update the local _sets to reflect the changes
-    // final setIndex = _sets.indexWhere((set) => set.setName == question.setName);
-    // if (setIndex != -1) {
-    //   final questionIndex = _sets[setIndex].questions.indexWhere((q) => q.id == question.id);
-    //   if (questionIndex != -1) {
-    //     // Update only the specific question fields
-    //     _sets[setIndex].questions[questionIndex].correctAnswers += (success ? 1 : 0);
-    //     _sets[setIndex].questions[questionIndex].totalAnswers += 1;
-    //   }
-    // }
+      final questionUpdate = {
+        'correctAnswers': question.correctAnswers + (success ? 1 : 0),
+        'totalAnswers': question.totalAnswers + 1,
+        'answeredToday': question.answeredToday + 1, // Increment answered today
+      };
 
-    // Notify listeners to update UI with the new question data
-    notifyListeners();
+      // Firestore batch for atomic updates
+      final batch = _firestore.batch();
+
+      // Update the specific question document
+      final questionRef = _setCollection
+          .doc(setId)
+          .collection('questions')
+          .doc(question.id);
+
+      batch.update(questionRef, questionUpdate);
+
+      // Update today's activity document
+      batch.set(activityDocRef, {
+        'answeredQuestions': FieldValue.increment(1),
+        'answeredCorrectly': FieldValue.increment(success ? 1 : 0),
+      }, SetOptions(merge: true));
+
+      // Commit Firestore batch
+      await batch.commit();
+
+      // Update local cache
+      final questionIndex =
+          _sets[setIndex].questions.indexWhere((q) => q.id == question.id);
+      if (questionIndex != -1) {
+        _sets[setIndex].questions[questionIndex].correctAnswers += (success ? 1 : 0);
+        _sets[setIndex].questions[questionIndex].totalAnswers += 1;
+        _sets[setIndex].questions[questionIndex].answeredToday += 1;
+      }
+
+      // Notify listeners to update UI
+      notifyListeners();
   } catch (e) {
     debugPrint("updateQuestionSuccessRate: Error updating question success rate: $e");
   }

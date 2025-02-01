@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/activity_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,9 +47,33 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProxyProvider<AuthProvider, SetProvider>(
           create: (_) => SetProvider(''),
-          update: (_, authProvider, setProvider) =>
-              SetProvider(authProvider.userEmail ?? ''),
+          update: (_, authProvider, setProvider) {
+            final userEmail = authProvider.userEmail ?? '';
+
+            // Initialize only if the userEmail changes or hasn't been initialized yet
+            if (setProvider == null || setProvider.userEmail != userEmail) {
+              final newProvider = SetProvider(userEmail);
+              newProvider.initialize();
+              return newProvider;
+            }
+            return setProvider;
+          },
         ),
+        ChangeNotifierProxyProvider<AuthProvider, ActivityProvider>(
+          create: (_) => ActivityProvider(''),
+          update: (_, authProvider, activityProvider) {
+            final userEmail = authProvider.userEmail ?? '';
+
+            // Initialize only if the userEmail changes or hasn't been initialized yet
+            if (activityProvider == null || activityProvider.userEmail != userEmail) {
+              final newProvider = ActivityProvider(userEmail);
+              newProvider.initialize();
+              return newProvider;
+            }
+
+            return activityProvider;
+          },
+      ),
       ],
       child: Consumer2<AuthProvider, ThemeProvider>(
         builder: (context, authProvider, themeProvider, _) {

@@ -13,6 +13,7 @@ dependencies:
   firebase_auth: ^5.3.4
   firebase_core: ^3.9.0
   firebase_vertexai: ^1.0.4
+  fl_chart: ^0.70.2
   flutter:
     sdk: flutter
   flutter_launcher_icons: ^0.14.2
@@ -20,6 +21,7 @@ dependencies:
   flutter_speed_dial: ^7.0.0
   google_sign_in: ^6.2.2
   http: ^1.2.2
+  intl: ^0.20.2
   provider: ^6.1.2
   settings_ui: ^2.0.2
 
