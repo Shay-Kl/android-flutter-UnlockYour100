@@ -266,7 +266,7 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
                     decoration: const InputDecoration(hintText: 'Set name'),
                   ),
                   const SizedBox(height: 16),
-                  Container(
+                  SizedBox(
                     height: 180,
                     width: double.maxFinite,
                     child: GridView.builder(
@@ -288,6 +288,8 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
                           },
                           child: Container(
                             decoration: BoxDecoration(
+                              color: colorKey.getColorFromScheme(
+                                  Theme.of(context).colorScheme),
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: selectedColorKey == colorKey

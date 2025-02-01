@@ -104,18 +104,7 @@ class _SetListScreenState extends State<SetListScreen> {
       },
     );
   }
-
-  // double _calculateSuccessRate(QuestionSet s) {
-  //   int totalCorrect = 0;
-  //   int totalAnswers = 0;
-
-  //   for (var question in s.questions) {
-  //     totalCorrect += question.correctAnswers;
-  //     totalAnswers += question.totalAnswers;
-  //   }
-
-  //   return totalAnswers == 0 ? 0.0 : totalCorrect / totalAnswers;
-  // }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -186,7 +175,7 @@ class _SetListScreenState extends State<SetListScreen> {
                               : totalQuestions == 1
                                   ? '$totalQuestions question'
                                   : '$totalQuestions questions',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
                           ),
                         ),
@@ -202,9 +191,10 @@ class _SetListScreenState extends State<SetListScreen> {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _showNewSetDialog,
-        child: const Icon(Icons.create_new_folder),
+        label: const Text('Create Set'),
+        icon: const Icon(Icons.create_new_folder),
       ),
     );
   }

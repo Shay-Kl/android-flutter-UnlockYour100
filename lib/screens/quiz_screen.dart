@@ -257,7 +257,7 @@ class _QuizScreenState extends State<QuizScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isHighlighted
-              ? (isCorrect ? Colors.green.shade700 : Colors.red.shade700)
+              ? (isCorrect ? Colors.green.shade700 : Colors.red.shade800)
               : colorScheme.inverseSurface,
           width: isHighlighted ? 6 : 2,
         ),
