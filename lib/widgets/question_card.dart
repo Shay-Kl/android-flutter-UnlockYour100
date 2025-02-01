@@ -46,7 +46,7 @@ class QuestionCard extends StatelessWidget {
                 child: MixedText(
                   text: question.question,
                   color: colorScheme.onSurface,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w400,
                   fontSize: 16,
                   textAlign: TextAlign.left,
                 ),
