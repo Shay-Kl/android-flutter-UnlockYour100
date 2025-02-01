@@ -68,8 +68,28 @@ class _QuizScreenState extends State<QuizScreen> {
       List<Question> questions = _fetchActiveQuestions(setProvider);
       if (!areListsEqual(questions, this.questions)) {
         this.questions = questions;
-        questions.shuffle();
-        currentIndex = 0;
+        // Sorting questions: First by answeredToday, then by correctAnswers/totalAnswers ratio
+        questions.sort((a, b) {
+          // Primary sort by answeredToday
+          final answeredTodayA = a.answeredToday;
+          final answeredTodayB = b.answeredToday;
+          if (answeredTodayA != answeredTodayB) {
+            return answeredTodayB.compareTo(answeredTodayA); // 1 should come before 0
+          }
+          
+          // Secondary sort by correctAnswers/totalAnswers ratio
+          final ratioA = a.totalAnswers == 0 ? 0 : a.correctAnswers / a.totalAnswers;
+          final ratioB = b.totalAnswers == 0 ? 0 : b.correctAnswers / b.totalAnswers;
+          return ratioB.compareTo(ratioA); // Higher ratio should come first
+        });
+
+        // Set currentIndex to the first question with answeredToday == 0
+        currentIndex = questions.indexWhere((question) => question.answeredToday == 0);
+        
+        // If all questions are answered, set currentIndex to the last question
+        if (currentIndex == -1) {
+          currentIndex = questions.length - 1; // Last question
+        }
         question = questions.isNotEmpty ? questions[currentIndex] : null;
         shuffledAnswers = question?.getShuffledAnswers() ?? [];
         selectedAnswer = null;
@@ -154,8 +174,8 @@ class _QuizScreenState extends State<QuizScreen> {
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         child: FilledButton(
           onPressed: hasAnswered ? _handleNextQuestionPress : null,
-          child: const Text(
-            'Next Question',
+          child: Text(
+            ((currentIndex != questions.length - 1) || !hasAnswered) ? 'Next Question' : 'Return to First Question',
           ),
         ),
       ),
@@ -292,6 +312,10 @@ class _QuizScreenState extends State<QuizScreen> {
         _audioPlayer.play(AssetSource('correct.mp3'));
         question!.correctAnswers = question!.correctAnswers + 1;
       }
+      final setProvider = Provider.of<SetProvider>(context, listen: false);
+      setProvider.updateQuestionSuccessRate(
+                                        question!,
+                                        text == question!.correctAnswer);
       question!.totalAnswers = question!.totalAnswers + 1;
     }
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'set_list_screen.dart';
 import 'profile_screen.dart';
 import 'quiz_screen.dart';
+import 'stats_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
+    GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
@@ -35,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildOffstageNavigator(0),
             _buildOffstageNavigator(1),
             _buildOffstageNavigator(2),
+            _buildOffstageNavigator(3),
           ],
         ),
         bottomNavigationBar: NavigationBar(
@@ -56,6 +59,11 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icon(Icons.folder_outlined),
               selectedIcon: Icon(Icons.folder),
               label: 'Library',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.insert_chart_outlined),  // Stats icon
+              selectedIcon: Icon(Icons.insert_chart),   // Selected stats icon
+              label: 'Stats',  // Name of the new destination
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outlined),
@@ -89,6 +97,8 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return const SetListScreen();
       case 2:
+        return const StatsScreen();
+      case 3:
         return const ProfileScreen();
       default:
         return Container();

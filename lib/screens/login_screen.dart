@@ -13,6 +13,7 @@ class LoginScreen extends StatelessWidget {
       final account = await googleSignIn.signIn();
       if (account != null) {
         Provider.of<AuthProvider>(context, listen: false).setUser(account);
+        
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
