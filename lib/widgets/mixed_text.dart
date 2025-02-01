@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
@@ -7,13 +6,15 @@ class MixedText extends StatelessWidget {
   final Color color;
   final FontWeight? fontWeight;
   final double fontSize;
-
-  const MixedText(
-      {super.key,
-      required this.text,
-      required this.color,
-      required this.fontWeight,
-      required this.fontSize});
+  final TextAlign textAlign; 
+  const MixedText({
+    super.key,
+    required this.text,
+    required this.color,
+    required this.fontWeight,
+    required this.fontSize,
+    this.textAlign = TextAlign.center,
+  });
 
   List<String> parseText(String text) {
     List<String> parts = [];
@@ -83,7 +84,7 @@ class MixedText extends StatelessWidget {
     }
     return RichText(
       text: TextSpan(children: children),
-      textAlign: TextAlign.center,
+      textAlign: textAlign, // use provided alignment
       textHeightBehavior: const TextHeightBehavior(
         applyHeightToFirstAscent: false,
         applyHeightToLastDescent: false,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/question.dart';
+import 'mixed_text.dart'; // added MixedText import
 
 class QuestionCard extends StatelessWidget {
   final Question question;
@@ -34,12 +35,6 @@ class QuestionCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: ExpansionTile(
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.zero, // Remove inner border radius
-          ),
-          collapsedShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.zero, // Remove inner border radius
-          ),
           title: Row(
             children: [
               if (checkboxValue != null)
@@ -47,37 +42,57 @@ class QuestionCard extends StatelessWidget {
                   value: checkboxValue,
                   onChanged: onCheckboxChanged,
                 ),
-              Expanded(child: Text(question.question)),
+              Expanded(
+                child: MixedText(
+                  text: question.question,
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  textAlign: TextAlign.left,
+                ),
+              ),
             ],
           ),
           children: [
-            // Explanation
-            if (question.explanation.isNotEmpty)
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Text(
-                  question.explanation,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                ),
-              ),
             // Correct Answer
             ListTile(
               dense: true,
               leading:
                   Icon(Icons.check_circle_outline, color: colorScheme.primary),
-              title: Text(question.correctAnswer),
+              title: MixedText(
+                text: question.correctAnswer,
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w400,
+                fontSize: 15,
+                textAlign: TextAlign.left,
+              ),
             ),
             // Wrong Answers
             ...question.wrongAnswers.map((answer) => ListTile(
                   dense: true,
                   leading: Icon(Icons.radio_button_unchecked,
                       color: colorScheme.outline),
-                  title: Text(answer),
+                  title: MixedText(
+                    text: answer,
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w300,
+                    fontSize: 15,
+                    textAlign: TextAlign.left,
+                  ),
                 )),
-            const SizedBox(height: 8),
+            // Explanation
+            if (question.explanation.isNotEmpty)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: MixedText(
+                  text: question.explanation,
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 15,
+                  textAlign: TextAlign.left,
+                ),
+              ),
           ],
         ),
       ),
