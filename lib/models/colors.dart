@@ -51,32 +51,6 @@ extension ColorSchemeKeyExtension on ColorSchemeKey {
       }
     }  
   }
-  Color getBorderColorFromScheme(ColorScheme scheme) {
-    if (scheme == ColorScheme.fromSeed(seedColor: Colors.blue)){
-      //switch (this) {
-      //  case ColorSchemeKey.Default:
-          return const Color.fromARGB(255, 0, 0, 0);
-      //  default: return getColorFromScheme(scheme);
-      //}
-    }
-    else {
-      //switch (this) {
-      //  case ColorSchemeKey.Default:
-          return const Color.fromARGB(255, 255, 255, 255);
-      //  default: return getColorFromScheme(scheme);
-      }
-    }  
-
-
-
-    Color getTextColorFromScheme(ColorScheme scheme) {
-    if (scheme == ColorScheme.fromSeed(seedColor: Colors.blue)){
-      return const Color.fromARGB(255, 0, 0, 0);
-    }
-    else {
-      return const Color.fromARGB(255, 255, 255, 255);
-    }
-  }
 
 
   String toKeyString() => toString().split('.').last;

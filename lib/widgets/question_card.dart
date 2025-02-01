@@ -26,7 +26,8 @@ class QuestionCard extends StatelessWidget {
       clipBehavior: Clip.hardEdge,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(
+        side: BorderSide(
+          color: colorScheme.inverseSurface,
           width: 1.0,
         ),
       ),
