@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-//import '../providers/question_provider.dart';
 import 'question_editor_screen.dart';
 import 'question_generator_screen.dart';
 import '../models/question.dart';
 import '../providers/set_provider.dart';
 import '../models/colors.dart';
 import '../models/set.dart';
-//import '../providers/theme_provider.dart';
 import '../widgets/question_card.dart';
-// ignore_for_file: use_build_context_synchronously
 
 class SetEditResult {
   final String name;
@@ -33,6 +30,7 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
   @override
   Widget build(BuildContext context) {
     final setProvider = Provider.of<SetProvider>(context);
+    final colorScheme = Theme.of(context).colorScheme;
     final currentSet = widget.set;
     setName = currentSet.setName;
     final questions = currentSet.questions;
@@ -43,10 +41,12 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
           SliverAppBar.large(
             backgroundColor: currentSet.selectedColorKey
                 .getColorFromScheme(Theme.of(context).colorScheme),
-            title: Text(setName,
-                style: TextStyle(
-                    color: currentSet.selectedColorKey.getTextColorFromScheme(
-                        Theme.of(context).colorScheme))),
+            title: Text(
+              setName,
+              style: TextStyle(
+                color: colorScheme.onSurface,
+              ),
+            ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.search),
@@ -55,8 +55,8 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
                     context: context,
                     delegate: QuestionSearchDelegate(
                       questions: questions,
-                      onEditQuestion: 
-                        _handleEditQuestion,
+                      onEditQuestion: _handleEditQuestion,
+                      buildQuestionList: (filteredQuestions) => _buildQuestionList(questions: filteredQuestions),
                     ),
                   );
                 },
@@ -137,6 +137,27 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
         final question = questions[index];
         return Dismissible(
           key: ValueKey('${index}_${question.question}'),
+            confirmDismiss: (direction) async {
+            return await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Delete Question'),
+                content: const Text('Are you sure you want to delete this question?'),
+                actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Delete'),
+                ),
+                ],
+              );
+              },
+            );
+            },
           onDismissed: (direction) {
             _handleDeleteQuestion(questions[index].id);
           },
@@ -146,7 +167,8 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
           child: QuestionCard(
             question: question,
             onTap: () => _handleEditQuestion(questions, setName, index),
-            margin: const EdgeInsets.only(top: 2, bottom: 8, left: 12, right: 12),
+            margin:
+                const EdgeInsets.only(top: 2, bottom: 8, left: 12, right: 12),
           ),
         );
       },
@@ -263,7 +285,7 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
                     decoration: const InputDecoration(hintText: 'Set name'),
                   ),
                   const SizedBox(height: 16),
-                  Container(
+                  SizedBox(
                     height: 180,
                     width: double.maxFinite,
                     child: GridView.builder(
@@ -296,10 +318,8 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
                               ),
                             ),
                             child: selectedColorKey == colorKey
-                                ? Icon(
+                                ? const Icon(
                                     Icons.check,
-                                    color: colorKey.getTextColorFromScheme(
-                                        Theme.of(context).colorScheme),
                                   )
                                 : null,
                           ),
@@ -331,7 +351,7 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
                   child: const Text('Save'),
                 ),
               ],
-            ); 
+            );
           },
         );
       },
@@ -342,10 +362,12 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
 class QuestionSearchDelegate extends SearchDelegate {
   final List<Question> questions;
   final void Function(List<Question>, String, int) onEditQuestion;
+  final Widget Function(List<Question>) buildQuestionList;  // New field
 
   QuestionSearchDelegate({
     required this.questions,
     required this.onEditQuestion,
+    required this.buildQuestionList,  // New parameter
   });
 
   @override
@@ -371,77 +393,49 @@ class QuestionSearchDelegate extends SearchDelegate {
   }
 
   @override
-Widget buildResults(BuildContext context) {
-  // Filter questions based on whether the query matches either the question or the answer
-  final filteredQuestions = questions
-      .where((question) =>
-          question.question.toLowerCase().contains(query.toLowerCase()) || // Match in question
-          question.answers.any((answer) => answer.toLowerCase().contains(query.toLowerCase()))) // Match in any answer
-      .toList();
+  Widget buildResults(BuildContext context) {
+    // Filter questions based on whether the query matches either the question or the answer
+    final filteredQuestions = questions
+        .where((question) =>
+            question.question
+                .toLowerCase()
+                .contains(query.toLowerCase()) || // Match in question
+            question.answers.any((answer) => answer
+                .toLowerCase()
+                .contains(query.toLowerCase()))) // Match in any answer
+        .toList();
 
-  return filteredQuestions.isEmpty
-      ? const Center(
-          child: Text(
-            'No matching questions or answers found.',
-            style: TextStyle(fontSize: 16.0),
-          ),
-        )
-      : ListView.builder(
-          itemCount: filteredQuestions.length,
-          itemBuilder: (context, index) {
-            final question = filteredQuestions[index];
-            final originalIndex = questions.indexOf(question);
-            final matchedAnswer = question.answers
-                .firstWhere((answer) => answer.toLowerCase().contains(query.toLowerCase()), orElse: () => question.correctAnswer);
-            return ListTile(
-              title: Text(question.question),
-              subtitle: Text(matchedAnswer), // Show the answer as a subtitle
-              onTap: () {
-                close(context, null); // Close the search first
-                Future.delayed(Duration.zero, () {
-                  // Navigate after the search is closed
-                  onEditQuestion(questions, question.setName, originalIndex);
-                });
-              },
-            );
-          },
-        );
+    if (filteredQuestions.isEmpty) {
+      return const Center(
+        child: Text(
+          'No matching questions or answers found.',
+          style: TextStyle(fontSize: 16.0),
+        ),
+      );
+    }
+    return buildQuestionList(filteredQuestions);
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-final filteredQuestions = questions
-      .where((question) =>
-          question.question.toLowerCase().contains(query.toLowerCase()) || // Match in question
-          question.answers.any((answer) => answer.toLowerCase().contains(query.toLowerCase()))) // Match in any answer
-      .toList();
+    final filteredQuestions = questions
+        .where((question) =>
+            question.question
+                .toLowerCase()
+                .contains(query.toLowerCase()) || // Match in question
+            question.answers.any((answer) => answer
+                .toLowerCase()
+                .contains(query.toLowerCase()))) // Match in any answer
+        .toList();
 
-  return filteredQuestions.isEmpty
-      ? const Center(
-          child: Text(
-            'No matching questions or answers found.',
-            style: TextStyle(fontSize: 16.0),
-          ),
-        )
-      : ListView.builder(
-          itemCount: filteredQuestions.length,
-          itemBuilder: (context, index) {
-            final question = filteredQuestions[index];
-            final originalIndex = questions.indexOf(question);
-            final matchedAnswer = question.answers
-                .firstWhere((answer) => answer.toLowerCase().contains(query.toLowerCase()), orElse: () => question.correctAnswer);
-            return ListTile(
-              title: Text(question.question),
-              subtitle: Text(matchedAnswer), // Show the answer as a subtitle
-              onTap: () {
-                close(context, null); // Close the search first
-                Future.delayed(Duration.zero, () {
-                  // Navigate after the search is closed
-                  onEditQuestion(questions, question.setName, originalIndex);
-                });
-              },
-            );
-          },
-        );
+    if (filteredQuestions.isEmpty) {
+      return const Center(
+        child: Text(
+          'No matching questions or answers found.',
+          style: TextStyle(fontSize: 16.0),
+        ),
+      );
+    }
+    return buildQuestionList(filteredQuestions);
   }
 }

@@ -14,7 +14,7 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  late ConfettiController _controllerBottomCenter;
+  late ConfettiController _confettiController;
   final AudioPlayer _audioPlayer = AudioPlayer();
   int currentIndex = 0;
   String? selectedAnswer;
@@ -51,13 +51,14 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
-    _controllerBottomCenter =
-        ConfettiController(duration: const Duration(seconds: 2));
+    _confettiController =
+        ConfettiController(duration: const Duration(milliseconds: 100));
   }
 
   @override
   void dispose() {
-    _controllerBottomCenter.dispose();
+    _confettiController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -74,18 +75,22 @@ class _QuizScreenState extends State<QuizScreen> {
           final answeredTodayA = a.answeredToday;
           final answeredTodayB = b.answeredToday;
           if (answeredTodayA != answeredTodayB) {
-            return answeredTodayB.compareTo(answeredTodayA); // 1 should come before 0
+            return answeredTodayB
+                .compareTo(answeredTodayA); // 1 should come before 0
           }
-          
+
           // Secondary sort by correctAnswers/totalAnswers ratio
-          final ratioA = a.totalAnswers == 0 ? 0 : a.correctAnswers / a.totalAnswers;
-          final ratioB = b.totalAnswers == 0 ? 0 : b.correctAnswers / b.totalAnswers;
+          final ratioA =
+              a.totalAnswers == 0 ? 0 : a.correctAnswers / a.totalAnswers;
+          final ratioB =
+              b.totalAnswers == 0 ? 0 : b.correctAnswers / b.totalAnswers;
           return ratioB.compareTo(ratioA); // Higher ratio should come first
         });
 
         // Set currentIndex to the first question with answeredToday == 0
-        currentIndex = questions.indexWhere((question) => question.answeredToday == 0);
-        
+        currentIndex =
+            questions.indexWhere((question) => question.answeredToday == 0);
+
         // If all questions are answered, set currentIndex to the last question
         if (currentIndex == -1) {
           currentIndex = questions.length - 1; // Last question
@@ -108,7 +113,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   child: Padding(
                     padding: EdgeInsets.all(16.0),
                     child: Text(
-                      'No questions available. Please activate an existing set with questions or create a new one and add questions to it to continue.',
+                      'No questions available. Please activate an set with questionsin the library to continue.',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 16.0),
                     ),
@@ -132,8 +137,8 @@ class _QuizScreenState extends State<QuizScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  ...shuffledAnswers
-                                      .map((answer) => _buildAnswerCard(answer)),
+                                  ...shuffledAnswers.map(
+                                      (answer) => _buildAnswerCard(answer)),
                                   if (hasAnswered &&
                                       question?.explanation != "")
                                     _buildExplanationCard(
@@ -150,13 +155,13 @@ class _QuizScreenState extends State<QuizScreen> {
           Align(
             alignment: Alignment.center,
             child: ConfettiWidget(
-              // make it blast down
-              numberOfParticles: 5,
-              emissionFrequency: 0.01,
-              minBlastForce: 10,
+              numberOfParticles: 8,
+              emissionFrequency: 0,
+              minBlastForce: 25,
               maxBlastForce: 50,
+              particleDrag: 0.03,
               blastDirectionality: BlastDirectionality.explosive,
-              gravity: 1,
+              gravity: 0.7,
               pauseEmissionOnLowFrameRate: true,
               colors: const [
                 Colors.green,
@@ -165,34 +170,37 @@ class _QuizScreenState extends State<QuizScreen> {
                 Colors.orange,
                 Colors.purple
               ],
-              confettiController: _controllerBottomCenter,
+
+              confettiController: _confettiController,
             ),
           ),
         ],
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-        child: FilledButton(
-          onPressed: hasAnswered ? _handleNextQuestionPress : null,
-          child: Text(
-            ((currentIndex != questions.length - 1) || !hasAnswered) ? 'Next Question' : 'Return to First Question',
-          ),
-        ),
-      ),
+      bottomNavigationBar: questions.isNotEmpty
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+              child: FilledButton(
+                onPressed: hasAnswered ? _handleNextQuestionPress : null,
+                child: Text(
+                  ((currentIndex != questions.length - 1) || !hasAnswered)
+                      ? 'Next Question'
+                      : 'Return to First Question',
+                ),
+              ),
+            )
+          : const SizedBox.shrink(),
     );
   }
 
   Widget _buildQuestionCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     final setProvider = Provider.of<SetProvider>(context);
     return Card.outlined(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
         side: BorderSide(
-          color: setProvider
-              .getSetByName(question!.setName)
-              .selectedColorKey
-              .getBorderColorFromScheme(Theme.of(context).colorScheme),
-          width: 1.0,
+          color: colorScheme.inverseSurface,
+          width: 2,
         ),
       ),
       color: setProvider
@@ -206,10 +214,7 @@ class _QuizScreenState extends State<QuizScreen> {
           children: [
             MixedText(
                 text: question!.question,
-                color: setProvider
-                    .getSetByName(question!.setName)
-                    .selectedColorKey
-                    .getTextColorFromScheme(Theme.of(context).colorScheme),
+                color: colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
                 fontSize: 20),
             const SizedBox(height: 8),
@@ -217,10 +222,6 @@ class _QuizScreenState extends State<QuizScreen> {
               question!.setName,
               style: TextStyle(
                 fontSize: 14,
-                color: setProvider
-                    .getSetByName(question!.setName)
-                    .selectedColorKey
-                    .getTextColorFromScheme(Theme.of(context).colorScheme),
               ),
               textAlign: TextAlign.center,
             ),
@@ -229,10 +230,6 @@ class _QuizScreenState extends State<QuizScreen> {
               '${currentIndex + 1}/${questions.length}',
               style: TextStyle(
                 fontSize: 14,
-                color: setProvider
-                    .getSetByName(question!.setName)
-                    .selectedColorKey
-                    .getTextColorFromScheme(Theme.of(context).colorScheme),
               ),
               textAlign: TextAlign.center,
             ),
@@ -256,11 +253,12 @@ class _QuizScreenState extends State<QuizScreen> {
       margin: EdgeInsets.symmetric(vertical: (isRelevant) ? 8 : 0),
       duration: const Duration(milliseconds: 150),
       decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isHighlighted
-              ? (isCorrect ? Colors.green.shade900 : Colors.red.shade900)
-              : colorScheme.onSurface,
+              ? (isCorrect ? Colors.green.shade700 : Colors.red.shade800)
+              : colorScheme.inverseSurface,
           width: isHighlighted ? 6 : 2,
         ),
       ),
@@ -284,8 +282,10 @@ class _QuizScreenState extends State<QuizScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
+        color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
+          color: colorScheme.inverseSurface,
           width: 2,
         ),
       ),
@@ -301,39 +301,37 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   _handleAnswerPress(String text) {
-    {
-      setState(() {
-        setStateChange = true;
-        selectedAnswer = text;
-        hasAnswered = true;
-      });
-      if (text == question!.correctAnswer) {
-        _controllerBottomCenter.play();
-        _audioPlayer.play(AssetSource('correct.mp3'));
-        question!.correctAnswers = question!.correctAnswers + 1;
-      }
-      final setProvider = Provider.of<SetProvider>(context, listen: false);
-      setProvider.updateQuestionSuccessRate(
-                                        question!,
-                                        text == question!.correctAnswer);
-      question!.totalAnswers = question!.totalAnswers + 1;
+    final setProvider = Provider.of<SetProvider>(context, listen: false);
+    setState(() {
+      setStateChange = true;
+      selectedAnswer = text;
+      hasAnswered = true;
+    });
+    if (text == question!.correctAnswer) {
+      _confettiController.play();
+
+      _audioPlayer.play(AssetSource('correct.mp3'));
+      question!.correctAnswers = question!.correctAnswers + 1;
+    } else {
+      _audioPlayer.play(AssetSource('wrong.mp3'), volume: 0.7);
     }
+    setProvider.updateQuestionSuccessRate(
+        question!, text == question!.correctAnswer);
+    question!.totalAnswers = question!.totalAnswers + 1;
   }
 
   _handleNextQuestionPress() {
-    {
-      setState(() {
-        setStateChange = true;
-        if (currentIndex != questions.length - 1) {
-          currentIndex = currentIndex + 1;
-        } else {
-          currentIndex = 0;
-        }
-        selectedAnswer = null;
-        hasAnswered = false;
-        question = questions[currentIndex];
-        shuffledAnswers = question!.getShuffledAnswers();
-      });
-    }
+    setState(() {
+      setStateChange = true;
+      if (currentIndex != questions.length - 1) {
+        currentIndex = currentIndex + 1;
+      } else {
+        currentIndex = 0;
+      }
+      selectedAnswer = null;
+      hasAnswered = false;
+      question = questions[currentIndex];
+      shuffledAnswers = question!.getShuffledAnswers();
+    });
   }
 }

@@ -15,6 +15,7 @@ class SetListScreen extends StatefulWidget {
 class _SetListScreenState extends State<SetListScreen> {
   void _showNewSetDialog() {
     final TextEditingController controller = TextEditingController();
+    final colorScheme = Theme.of(context).colorScheme;
     ColorSchemeKey selectedColorKey =
         ColorSchemeKey.Default; // Default color key
 
@@ -33,16 +34,17 @@ class _SetListScreenState extends State<SetListScreen> {
                     decoration: const InputDecoration(hintText: 'New set name'),
                   ),
                   const SizedBox(height: 16),
-                  Container(
+                  SizedBox(
                     height: 180, // Fixed height for the color grid
                     width: double.maxFinite,
                     child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 4,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
                         childAspectRatio: 1,
-                      ),  
+                      ),
                       itemCount: ColorSchemeKey.values.length,
                       itemBuilder: (context, index) {
                         final colorKey = ColorSchemeKey.values[index];
@@ -67,8 +69,7 @@ class _SetListScreenState extends State<SetListScreen> {
                             child: selectedColorKey == colorKey
                                 ? Icon(
                                     Icons.check,
-                                    color: colorKey.getTextColorFromScheme(
-                                        Theme.of(context).colorScheme),
+                                    color: colorScheme.onSurface,
                                   )
                                 : null,
                           ),
@@ -107,6 +108,7 @@ class _SetListScreenState extends State<SetListScreen> {
   @override
   Widget build(BuildContext context) {
     final setProvider = Provider.of<SetProvider>(context);
+    final colorScheme = Theme.of(context).colorScheme;
     //final themeProvider = Provider.of<ThemeProvider>(context);
     final questionSets = setProvider.sets;
     return Scaffold(
@@ -137,9 +139,7 @@ class _SetListScreenState extends State<SetListScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
                     side: BorderSide(
-                      color: set.selectedColorKey.getBorderColorFromScheme(
-                          Theme.of(context).colorScheme),
-                      width: 1.0,
+                      color: colorScheme.inverseSurface,
                     ),
                   ),
                   child: Material(
@@ -164,10 +164,8 @@ class _SetListScreenState extends State<SetListScreen> {
                         ),
                         title: Text(
                           set.setName,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: set.selectedColorKey
-                                .getTextColorFromScheme(Theme.of(context).colorScheme),
                           ),
                         ),
                         subtitle: Text(
@@ -176,10 +174,8 @@ class _SetListScreenState extends State<SetListScreen> {
                               : totalQuestions == 1
                                   ? '$totalQuestions question'
                                   : '$totalQuestions questions',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
-                            color: set.selectedColorKey
-                                .getTextColorFromScheme(Theme.of(context).colorScheme),
                           ),
                         ),
                         trailing: Switch(
@@ -194,9 +190,10 @@ class _SetListScreenState extends State<SetListScreen> {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _showNewSetDialog,
-        child: const Icon(Icons.create_new_folder),
+        label: const Text('Create Set'),
+        icon: const Icon(Icons.create_new_folder),
       ),
     );
   }

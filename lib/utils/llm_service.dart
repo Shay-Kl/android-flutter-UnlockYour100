@@ -13,7 +13,7 @@ class AnswerGenerator {
       All answers should be at most 20 words long.
       Do not explain the rational for the answer within the answer itself. Keep the answers concise. Do this for both correct and incorrect answers.
       In the case of the correct answer, do not include any information that would make it stand out from the incorrect answers.
-      In the explanation field, provide a brief explanation of why the correct answer is correct. Keep it under 50 words.
+      In the explanation field, provide a brief explanation of why the correct answer is correct and add some additional context if relevant.
       """);
   static final answersSchema = Schema.object(
     properties: {
@@ -51,16 +51,28 @@ class QuestionGenerator {
       Do not write a more detailed explanation for the correct answer than for the incorrect answers.
       Do not explain the rational for the answer within the answer itself. Keep the answers concise. Do this for both correct and incorrect answers.
       In the case of the correct answer, do not include any information that would make it stand out from the incorrect answers.
-      In the explanation field, provide a brief explanation of why the correct answer is correct. Explain what sets it apart from the incorrect answers.
+      In the explanation field, provide a brief explanation of why the correct answer is correct. Add additional context to the answer if relevant.
+      Don't just repeat the answer in the explanation. Add some additional info the user might want to see to understand the answer.
 
       Don't repeat the same question twice.
       Don't use the same answer twice in the same question.
       Don't repeat information found in the question in the answers.
-      Always output questions and answers in English. No matter what language the input is in.
 
+      When using mathematical formulas, use LaTeX syntax.
       When writing questions with LaTeX formulas, encapsulate the LaTeX parts with "\$" signs on both sides. 
       Use only one backslash in LaTeX formulas (e.g., use `\\int` instead of `\\\\int`). 
       If LaTeX needs to be mixed with regular text, ensure the LaTeX is seamlessly included in the flow of the text.
+
+      Some examples of how you should use the explanation field:
+      Question: How many continents are there in the world?
+      Correct Answer: 7
+      Wrong Answers: 5, 6, 8, 9
+      Explanation: The 7 continents are Africa, Antarctica, Asia, Australia, Europe, North America, and South America.
+
+      Question: Which country is known as the Land of the Rising Sun?
+      Correct Answer: Japan
+      Wrong Answers: China, Korea, Vietnam, Thailand
+      Explanation: Japan is known as the Land of the Rising Sun because it is located to the east of China and is one of the first countries to see the sunrise each day.
       """);
   static final questionsSchema = Schema.object(
     properties: {
