@@ -14,6 +14,7 @@ class Question {
   int answeredToday;
 
   List<String> get answers => [correctAnswer, ...wrongAnswers];
+  double get successRate => (totalAnswers != 0) ? correctAnswers / totalAnswers : 0;
 
   Question({
     this.id,

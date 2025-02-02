@@ -29,17 +29,6 @@ class QuestionSet {
     };
   }
 
-  // static QuestionSet fromDocument(DocumentSnapshot doc) {
-  //   final data = doc.data() as Map<String, dynamic>;
-  //   final questionList = (data['questions'] as List<dynamic>?)?.map((item) => Question.fromMap(item as Map<String, dynamic>)).toList() ?? [];
-  //   return QuestionSet(
-  //     setName: data['setName'],
-  //     isActive: data['isActive'] ?? true,
-  //     questions: questionList,
-  //     selectedColor: AppColor.values[data['selectedColor'] as int],
-  //   );
-  // }
-
   factory QuestionSet.fromFirestore(
     Map<String, dynamic> data,
     List<Question> questions,) 

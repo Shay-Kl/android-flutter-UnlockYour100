@@ -223,7 +223,6 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
   }
 
   void _handleSavePress(Question q) {
-    //debugPrint(q.answeredToday.toString());
     if (_formKey.currentState!.validate()) {
       final newQuestion = Question(
         id: q.id,
