@@ -197,32 +197,35 @@ class _ReviewCardState extends State<ReviewCard>{
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
-                          //reservedSize: 10,
+                          reservedSize: 30,
                           interval: max(1, _calculateMaxY(answered) / 5),
                           getTitlesWidget: (value, _) => Text(value.toInt().toString()),
                         ),
                       ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 32,
-                          interval: answered.length > 7 ? (answered.length / 7).floor().toDouble() : 1,
-                          getTitlesWidget: (value, _) {
-                            final index = value.toInt();
-                            final titlesPerGroup = (answered.length / (answered.length > 7 ? 7 : answered.length)).ceil();
-                            if (index >= 0 && index < answered.length && index % titlesPerGroup == 0) {
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8), // Add padding for better spacing
-                                child: Text(
-                                  'Day ${(index + 1)}',
-                                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),  // You can adjust font size for readability
-                                ),
-                              );
-                            }  else {
-                              return const SizedBox.shrink();
-                            }
-                          },
-                        ),
+                      // bottomTitles: AxisTitles(
+                      //   sideTitles: SideTitles(
+                      //     showTitles: true,
+                      //     reservedSize: 32,
+                      //     interval: answered.length > 7 ? (answered.length / 7).floor().toDouble() : 1,
+                      //     getTitlesWidget: (value, _) {
+                      //       final index = value.toInt();
+                      //       final titlesPerGroup = (answered.length / (answered.length > 7 ? 7 : answered.length)).ceil();
+                      //       if (index >= 0 && index < answered.length && index % titlesPerGroup == 0) {
+                      //         return Padding(
+                      //           padding: const EdgeInsets.symmetric(vertical: 8), // Add padding for better spacing
+                      //           child: Text(
+                      //             'Day ${(index + 1)}',
+                      //             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),  // You can adjust font size for readability
+                      //           ),
+                      //         );
+                      //       }  else {
+                      //         return const SizedBox.shrink();
+                      //       }
+                      //     },
+                      //   ),
+                      // ),
+                      bottomTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
                       ),
                       topTitles: const AxisTitles(
                         sideTitles: SideTitles(showTitles: false),
@@ -260,6 +263,7 @@ class _ReviewCardState extends State<ReviewCard>{
                 duration: const Duration(milliseconds: 0),
               ),
             ),
+            const SizedBox(height: 4),
             Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -477,6 +481,7 @@ class _SuccessRateCardState extends State<SuccessRateCard> {
                     items: allSetNames.map((set) {
                       return DropdownMenuItem(value: set, child: Text(set));
                     }).toList(),
+                    isExpanded: true,
                     onChanged: selectedOption != 'Choose one' 
                       ? null  // Disable the dropdown
                       : (value) {
