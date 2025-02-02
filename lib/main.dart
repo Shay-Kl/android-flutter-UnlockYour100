@@ -22,10 +22,7 @@ class MyAppInit extends StatelessWidget {
       future: _initialization,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Scaffold(
-              body: Center(
-                  child: Text(snapshot.error.toString(),
-                      textDirection: TextDirection.ltr)));
+          return Scaffold(body: Center(child: Text(snapshot.error.toString(), textDirection: TextDirection.ltr)));
         }
         if (snapshot.connectionState == ConnectionState.done) {
           return const MyApp();
@@ -45,6 +42,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider<SettingsManager>.value(value: SettingsManager.instance),
         ChangeNotifierProxyProvider<AuthProvider, SetProvider>(
           create: (_) => SetProvider(''),
           update: (_, authProvider, setProvider) {
@@ -73,7 +71,7 @@ class MyApp extends StatelessWidget {
 
             return activityProvider;
           },
-      ),
+        ),
       ],
       child: Consumer2<AuthProvider, ThemeProvider>(
         builder: (context, authProvider, themeProvider, _) {
@@ -89,8 +87,7 @@ class MyApp extends StatelessWidget {
               useMaterial3: true,
             ),
             darkTheme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                  seedColor: Colors.blue, brightness: Brightness.dark),
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.dark),
               useMaterial3: true,
             ),
             themeMode: themeProvider.themeMode,
