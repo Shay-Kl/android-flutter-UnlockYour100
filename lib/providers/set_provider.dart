@@ -350,5 +350,8 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
       debugPrint("deleteQuestionFromSet: Error deleting question from set: $e");
     } 
   }
+  bool setExists(String setName) {
+    return _sets.any((set) => set.setName == setName);
+  }
 }
 

@@ -16,6 +16,8 @@ Future<SetEditResult?> showNewSetDialog(
   final TextEditingController controller =
       TextEditingController(text: initialName);
   ColorSchemeKey selectedColorKey = initialColor;
+  // New validation error variable.
+  String? errorText;
   final colorScheme = Theme.of(context).colorScheme;
 
   return showDialog<SetEditResult?>(
@@ -24,14 +26,16 @@ Future<SetEditResult?> showNewSetDialog(
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Text((isNewSet) ? 'Create New Set' : 'Edit Set'),
+            title: Text(isNewSet ? 'Create New Set' : 'Edit Set'),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: controller,
-                    decoration: const InputDecoration(hintText: 'Set name'),
+                    // Updated decoration to show errorText if any.
+                    decoration: InputDecoration(
+                        hintText: 'Set name', errorText: errorText),
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
@@ -90,9 +94,27 @@ Future<SetEditResult?> showNewSetDialog(
               TextButton(
                 onPressed: () {
                   final newName = controller.text.trim();
-                  if (newName.isNotEmpty &&
-                      (newName != initialName ||
-                          selectedColorKey != initialColor)) {
+                  // Validate empty name.
+                  if (newName.isEmpty) {
+                    setState(() {
+                      errorText = "Name cannot be empty";
+                    });
+                    return;
+                  }
+                  // Validate name duplicate (ignoring initial name).
+                  if (setProvider.setExists(newName) &&
+                      newName != initialName) {
+                    setState(() {
+                      errorText = "Set name already exists";
+                    });
+                    return;
+                  }
+                  // Clear error if validation passes.
+                  setState(() {
+                    errorText = null;
+                  });
+                  if (newName != initialName ||
+                      selectedColorKey != initialColor) {
                     Navigator.pop(
                         context, SetEditResult(newName, selectedColorKey));
                   } else {
