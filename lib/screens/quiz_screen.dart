@@ -72,8 +72,8 @@ class _QuizScreenState extends State<QuizScreen> {
         // Sorting questions: First by answeredToday, then by correctAnswers/totalAnswers ratio
         questions.sort((a, b) {
           // Primary sort by answeredToday
-          final answeredTodayA = a.answeredToday;
-          final answeredTodayB = b.answeredToday;
+          final answeredTodayA = a.isAnsweredToday ? 1 : 0;
+          final answeredTodayB = b.isAnsweredToday ? 1 : 0;
           if (answeredTodayA != answeredTodayB) {
             return answeredTodayB
                 .compareTo(answeredTodayA); // 1 should come before 0
@@ -89,13 +89,10 @@ class _QuizScreenState extends State<QuizScreen> {
 
         // Set currentIndex to the first question with answeredToday == 0
         currentIndex =
-            questions.indexWhere((question) => question.answeredToday == 0);
+            questions.indexWhere((question) => !question.isAnsweredToday);
 
         // If all questions are answered, set currentIndex to the last question
-        if (currentIndex == -1) {
-          currentIndex = questions.length - 1; // Last question
-        }
-        question = questions.isNotEmpty ? questions[currentIndex] : null;
+        question = (questions.isNotEmpty && currentIndex != -1) ? questions[currentIndex] : null;
         shuffledAnswers = question?.getShuffledAnswers() ?? [];
         selectedAnswer = null;
         hasAnswered = false;
@@ -119,7 +116,20 @@ class _QuizScreenState extends State<QuizScreen> {
                     ),
                   ),
                 )
-              : Padding(
+              : 
+              currentIndex == -1
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'All active questions have been answered today',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16.0),
+                      ),
+                    ),
+                  )
+                :
+              Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -180,9 +190,9 @@ class _QuizScreenState extends State<QuizScreen> {
           ? Padding(
               padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
               child: FilledButton(
-                onPressed: hasAnswered ? _handleNextQuestionPress : null,
+                onPressed: (hasAnswered || currentIndex == -1) ? _handleNextQuestionPress : null,
                 child: Text(
-                  ((currentIndex != questions.length - 1) || !hasAnswered)
+                  ((currentIndex != questions.length - 1) && currentIndex != -1)
                       ? 'Next Question'
                       : 'Return to First Question',
                 ),
@@ -195,6 +205,7 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget _buildQuestionCard() {
     final colorScheme = Theme.of(context).colorScheme;
     final setProvider = Provider.of<SetProvider>(context);
+    final questionsLeft = questions.length-currentIndex;
     return Card.outlined(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
@@ -227,8 +238,11 @@ class _QuizScreenState extends State<QuizScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              '${currentIndex + 1}/${questions.length}',
-              style: TextStyle(
+              (questionsLeft == 1)
+                  ? 'Last question'
+                  :
+              '${questions.length-currentIndex} questions left',
+              style: const TextStyle(
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,

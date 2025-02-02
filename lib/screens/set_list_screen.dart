@@ -42,6 +42,8 @@ class _SetListScreenState extends State<SetListScreen> {
               itemBuilder: (context, index) {
                 final set = questionSets[index];
                 final totalQuestions = set.questions.length;
+                final answeredQuestions = set.questionsAnsweredToday;
+                bool completed = answeredQuestions == totalQuestions;
                 return Card.outlined(
                   color: set.selectedColorKey
                       .getColorFromScheme(Theme.of(context).colorScheme),
@@ -80,9 +82,9 @@ class _SetListScreenState extends State<SetListScreen> {
                         subtitle: Text(
                           totalQuestions == 0
                               ? 'Empty set'
-                              : totalQuestions == 1
-                                  ? '$totalQuestions question'
-                                  : '$totalQuestions questions',
+                              : (answeredQuestions == totalQuestions)
+                                  ? 'All $totalQuestions questions answered today'
+                                  : '$answeredQuestions/$totalQuestions Questions answered today',
                           style: const TextStyle(
                             fontSize: 12,
                           ),
