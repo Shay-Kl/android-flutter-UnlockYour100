@@ -57,10 +57,6 @@ class MixedText extends StatelessWidget {
     final List<String> parts = parseText(text);
     // Split the text by a delimiter (e.g., "$") to separate LaTeX from regular text
     final List<InlineSpan> children = [];
-
-    for (int i = 0; i < parts.length; i++) {
-      debugPrint(parts[i]);
-    }
     // Loop through the parts, adding Text or Math.tex as needed
     for (int i = 0; i < parts.length; i++) {
       if (parts[i].startsWith(r'$') && parts[i].endsWith(r'$')) {

@@ -52,7 +52,6 @@ extension ColorSchemeKeyExtension on ColorSchemeKey {
     }  
   }
 
-
   String toKeyString() => toString().split('.').last;
 
   static ColorSchemeKey fromKeyString(String key) =>

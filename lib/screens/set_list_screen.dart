@@ -104,7 +104,6 @@ class _SetListScreenState extends State<SetListScreen> {
       },
     );
   }
-  
 
   @override
   Widget build(BuildContext context) {

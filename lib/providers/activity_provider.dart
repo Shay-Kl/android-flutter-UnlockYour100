@@ -31,53 +31,6 @@ class ActivityProvider extends ChangeNotifier {
     _listenToFirestore();
   }
   
-
-  // Future<void> _fetchUserActivityData() async {
-  //   try {
-  //     _isLoading = true;
-  //     // Define the start date for the last 30 days
-  //     final now = DateTime.now();
-  //     final startDate = now.subtract(const Duration(days: 30));
-  //     final querySnapshot = await _activityCollection
-  //         .where('lastLogin', isGreaterThanOrEqualTo: startDate)
-  //         .orderBy('lastLogin')
-  //         .get();
-  //     // Maps to store the user activity data
-  //     final activityMap = <String, int>{};
-  //     // Process the data fetched from Firestore
-  //     for (var doc in querySnapshot.docs) {
-  //       final activityData = doc.data();
-  //       final date = (activityData['lastLogin'] as Timestamp).toDate();
-  //       final formattedDate = DateFormat('yyyy-MM-dd').format(date);
-  //       final answeredQuestions = activityData['answeredQuestions'] as int;
-  //       // Aggregate the number of answered Questions per day
-  //       if (activityMap.containsKey(formattedDate)) {
-  //         activityMap[formattedDate] = activityMap[formattedDate]! + answeredQuestions;
-  //       } else {
-  //         activityMap[formattedDate] = answeredQuestions;
-  //       }
-  //     }
-  //     // Generate the list of the last 31 days
-  //     final last30Days = List.generate(31, (index) {
-  //       final day = startDate.add(Duration(days: index));
-  //       return DateFormat('yyyy-MM-dd').format(day);
-  //     });
-  //     // Populate the answeredQuestionsPerDay and days lists
-  //     List<int> answeredQuestionsPerDay = [];
-  //     List<String> days = [];
-  //     for (var day in last30Days) {
-  //       answeredQuestionsPerDay.add(activityMap[day] ?? 0);
-  //       days.add(day);
-  //     }
-  //     _answeredQuestionsPerDay = answeredQuestionsPerDay;
-  //     _days = days;
-  //     _isLoading = false;
-  //   } catch (error) {
-  //     _isLoading = false;
-  //     debugPrint("Error fetching user activity data: $error");
-  //   }
-  // }
-
   void _listenToFirestore() {
   try {
     _firestoreSubscription = _activityCollection.snapshots().listen((snapshot) async {

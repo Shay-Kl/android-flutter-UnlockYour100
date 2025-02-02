@@ -99,66 +99,6 @@ class SetProvider extends ChangeNotifier {
     super.dispose();
   }
 
-//   Future<void> _fetchSets() async {
-//   try {
-
-//     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    
-//     // Check if user logged in and answered questions today
-//     final activityDocRef = _firestore
-//         .collection('users')
-//         .doc(userEmail)
-//         .collection('activity')
-//         .doc(today);
-
-//     final activitySnapshot = await activityDocRef.get();
-//     bool answeredQuestionsToday = false;
-
-//     if (activitySnapshot.exists) {
-//       final data = activitySnapshot.data() as Map<String, dynamic>;
-//       answeredQuestionsToday = (data['answeredQuestions'] ?? 0) > 0;
-//     }
-
-//     // Fetch all sets
-//     final snapshot = await _setCollection.get();
-//     final List<Future<QuestionSet>> setFutures = [];
-//     final batch = _firestore.batch();
-
-//     for (final doc in snapshot.docs) {
-//       setFutures.add(_fetchSetWithQuestions(doc, resetAnswers: !answeredQuestionsToday));
-
-//       // Fetch questions for this set
-//       final questionsSnapshot =
-//           await doc.reference.collection('questions').get();
-
-//       for (final questionDoc in questionsSnapshot.docs) {
-//         final question = Question.fromDocument(questionDoc);
-
-//         if (!answeredQuestionsToday || question.answeredToday > 0) {
-//           // Reset answeredToday field
-//           question.answeredToday = 0;
-
-//           batch.update(questionDoc.reference, {
-//             'answeredToday': question.answeredToday,
-//           });
-//         }
-//       }
-//     }
-
-//     // Wait for all sets to be fetched concurrently
-//     final fetchedSets = await Future.wait(setFutures);
-//     await batch.commit();
-//     // Update state
-//     if (!_areSetsEqual(_sets, fetchedSets)) {
-//       _sets = fetchedSets;
-//       notifyListeners();
-//     }
-//   } catch (e) {
-//     debugPrint("fetchSets: Error fetching sets: $e");
-//     _sets = [];
-//   }
-// }
-
 Future<QuestionSet> _fetchSetWithQuestions(DocumentSnapshot doc, {bool resetAnswers = false}) async {
   try {
     final data = doc.data() as Map<String, dynamic>;
@@ -354,18 +294,6 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
       debugPrint("createSet: Error creating set: $e");
     }
   }
-
-//not updated
-  // Future<List<String>> getSetNames() async {
-  //   try {
-  //     final setsSnapshot = await _setCollection.get();
-  //     return setsSnapshot.docs.map((doc) => doc.id).toList();
-  //   }
-  //   catch (e) {
-  //     debugPrint("getSetNames: Error getting set name: $e");
-  //     return [];
-  //   }
-  // }
 
   Future<void> deleteSet(String setName) async {
     try {
