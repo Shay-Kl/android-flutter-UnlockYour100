@@ -14,15 +14,13 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final _settings = SettingsManager.instance;
-
-  // -------------------------------------------------------------------------
-  // Build Functions
-  // -------------------------------------------------------------------------
+  // Remove local reference _settings
 
   @override
   Widget build(BuildContext context) {
     final scaffoldBackgroundColor = Theme.of(context).scaffoldBackgroundColor;
+    // Get settings from provider
+    final settings = Provider.of<SettingsManager>(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile'), actions: [
@@ -42,7 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         sections: [
           _buildUserProfile(),
-          _buildPreferences(),
+          _buildPreferences(settings),
           _buildAccountActions(),
         ],
       ),
@@ -61,8 +59,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               CircleAvatar(
                 backgroundImage: authProvider.currentUser?.photoUrl != null
                     ? NetworkImage(authProvider.currentUser!.photoUrl!)
-                    : const AssetImage('assets/images/default_avatar.png')
-                        as ImageProvider,
+                    : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
                 radius: 40,
               ),
               const SizedBox(height: 8),
@@ -77,9 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 authProvider.userEmail ?? '',
                 style: TextStyle(
                   fontSize: 14,
-                  color: brightness == Brightness.light
-                      ? Colors.grey[600]
-                      : Colors.grey[400],
+                  color: brightness == Brightness.light ? Colors.grey[600] : Colors.grey[400],
                 ),
               ),
             ],
@@ -89,14 +84,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ]);
   }
 
-  SettingsSection _buildPreferences() {
+  SettingsSection _buildPreferences(SettingsManager settings) {
     return SettingsSection(
       title: const Text('Preferences'),
       tiles: [
         SettingsTile.navigation(
           leading: const Icon(Icons.auto_awesome),
           title: const Text('Language Model'),
-          value: Text(_settings.current['model']!),
+          value: Text(settings.current['model']!),
           onPressed: (context) => _showOptionsDialog(
             'Language Model',
             'model',
@@ -110,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SettingsTile.navigation(
           leading: const Icon(Icons.palette),
           title: const Text('Theme'),
-          value: Text(_settings.current['theme']!),
+          value: Text(settings.current['theme']!),
           onPressed: (context) => _showOptionsDialog(
             'Theme',
             'theme',
@@ -133,8 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           leading: const Icon(Icons.logout, color: Colors.red),
           title: const Text('Log Out', style: TextStyle(color: Colors.red)),
           onPressed: (context) async {
-            final authProvider =
-                Provider.of<AuthProvider>(context, listen: false);
+            final authProvider = Provider.of<AuthProvider>(context, listen: false);
             await authProvider.signOut(context);
             if (context.mounted) {
               Navigator.of(context, rootNavigator: true).pushReplacement(
@@ -146,10 +140,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
+
   // -------------------------------------------------------------------------
   // User Input Handlers
   // -------------------------------------------------------------------------
-
 
   void _showAboutDialog(BuildContext context) {
     showAboutDialog(
@@ -185,26 +179,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: options
-              .map((option) => RadioListTile<String>(
-                    title: Text(option.key),
-                    subtitle:
-                        option.value.isNotEmpty ? Text(option.value) : null,
-                    value: option.key,
-                    groupValue: _settings.current[settingKey],
-                    onChanged: (value) async {
-                      if (value != null) {
-                        await _settings.update(settingKey, value);
-                        if (settingKey == 'theme') {
-                          Provider.of<ThemeProvider>(context, listen: false)
-                              .setTheme(value);
-                        }
-                        setState(() {});
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                        }
-                      }
-                    },
-                  ))
+              .map(
+                (option) => RadioListTile<String>(
+                  title: Text(option.key),
+                  subtitle: option.value.isNotEmpty ? Text(option.value) : null,
+                  value: option.key,
+                  groupValue: Provider.of<SettingsManager>(context, listen: false).current[settingKey],
+                  onChanged: (value) {
+                    if (value != null) {
+                      Provider.of<SettingsManager>(context, listen: false).update(settingKey, value);
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
+              )
               .toList(),
         ),
       ),
