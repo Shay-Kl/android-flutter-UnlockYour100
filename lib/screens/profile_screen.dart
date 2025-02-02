@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:settings_ui/settings_ui.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../providers/auth_provider.dart';
 import '../utils/settings_manager.dart';
 import 'package:project/screens/login_screen.dart';
@@ -14,13 +15,15 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Remove local reference _settings
+  final _settings = SettingsManager.instance;
+
+  // -------------------------------------------------------------------------
+  // Build Functions
+  // -------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
     final scaffoldBackgroundColor = Theme.of(context).scaffoldBackgroundColor;
-    // Get settings from provider
-    final settings = Provider.of<SettingsManager>(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile'), actions: [
@@ -40,7 +43,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         sections: [
           _buildUserProfile(),
-          _buildPreferences(settings),
+          _buildPreferences(),
           _buildAccountActions(),
         ],
       ),
@@ -84,14 +87,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ]);
   }
 
-  SettingsSection _buildPreferences(SettingsManager settings) {
+  SettingsSection _buildPreferences() {
     return SettingsSection(
       title: const Text('Preferences'),
       tiles: [
         SettingsTile.navigation(
           leading: const Icon(Icons.auto_awesome),
           title: const Text('Language Model'),
-          value: Text(settings.current['model']!),
+          value: Text(_settings.current['model']!),
           onPressed: (context) => _showOptionsDialog(
             'Language Model',
             'model',
@@ -105,7 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SettingsTile.navigation(
           leading: const Icon(Icons.palette),
           title: const Text('Theme'),
-          value: Text(settings.current['theme']!),
+          value: Text(_settings.current['theme']!),
           onPressed: (context) => _showOptionsDialog(
             'Theme',
             'theme',
@@ -135,6 +138,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
               );
             }
+          },
+        ),
+        SettingsTile(
+          leading: const Icon(Icons.delete_forever, color: Colors.red),
+          title: const Text('Delete Account', style: TextStyle(color: Colors.red)),
+          onPressed: (context) {
+            _confirmDeleteAccount(context);
           },
         ),
       ],
@@ -179,23 +189,104 @@ class _ProfileScreenState extends State<ProfileScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: options
-              .map(
-                (option) => RadioListTile<String>(
-                  title: Text(option.key),
-                  subtitle: option.value.isNotEmpty ? Text(option.value) : null,
-                  value: option.key,
-                  groupValue: Provider.of<SettingsManager>(context, listen: false).current[settingKey],
-                  onChanged: (value) {
-                    if (value != null) {
-                      Provider.of<SettingsManager>(context, listen: false).update(settingKey, value);
-                      Navigator.of(context).pop();
-                    }
-                  },
-                ),
-              )
+              .map((option) => RadioListTile<String>(
+                    title: Text(option.key),
+                    subtitle: option.value.isNotEmpty ? Text(option.value) : null,
+                    value: option.key,
+                    groupValue: _settings.current[settingKey],
+                    onChanged: (value) async {
+                      if (value != null) {
+                        await _settings.update(settingKey, value);
+                        if (settingKey == 'theme') {
+                          Provider.of<ThemeProvider>(context, listen: false).setTheme(value);
+                        }
+                        setState(() {});
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                        }
+                      }
+                    },
+                  ))
               .toList(),
         ),
       ),
     );
+  }
+
+  void _confirmDeleteAccount(BuildContext context) {
+    final parentContext = context; // Capture the parent's context
+    showDialog(
+      context: parentContext,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('WARNING!'),
+        content: const Text(
+          'Deleting your account will permanently remove all your data.\n\n'
+          'Are you absolutely sure you want to continue?',
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(dialogContext).pop(),
+          ),
+          TextButton(
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.red),
+            ),
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await _deleteUserData();
+              final authProvider = Provider.of<AuthProvider>(parentContext, listen: false);
+              await authProvider.signOut(parentContext);
+              if (parentContext.mounted) {
+                Navigator.of(parentContext, rootNavigator: true).pushReplacement(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Use this version of _deleteUserData() to sequentially delete all nested documents,
+  // ensuring that every document under the user is deleted before removing the root user document.
+
+  Future<void> _deleteUserData() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userEmail = authProvider.userEmail;
+      if (userEmail == null || userEmail.isEmpty) return;
+
+      final firestore = FirebaseFirestore.instance;
+      final userDocRef = firestore.collection('users').doc(userEmail);
+
+      // Delete the 'preferences' document from the 'settings' subcollection
+      await userDocRef.collection('settings').doc('preferences').delete();
+
+      // Delete each document in the 'sets' subcollection, along with its nested 'questions'
+      final setsSnapshot = await userDocRef.collection('sets').get();
+      for (final setDoc in setsSnapshot.docs) {
+        // Delete every document in the nested 'questions' subcollection
+        final questionsSnapshot = await setDoc.reference.collection('questions').get();
+        for (final questionDoc in questionsSnapshot.docs) {
+          await questionDoc.reference.delete();
+        }
+        await setDoc.reference.delete();
+      }
+
+      // Delete all documents in the 'activity' subcollection
+      final activitySnapshot = await userDocRef.collection('activity').get();
+      for (final doc in activitySnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      // Finally, delete the root user document
+      await userDocRef.delete();
+    } catch (e) {
+      debugPrint('Error deleting user data: $e');
+    }
   }
 }
