@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project/screens/question_list_screen.dart';
+import 'package:project/widgets/set_creator_dialog.dart';
 import 'package:provider/provider.dart';
 import '../providers/set_provider.dart';
 //import '../providers/theme_provider.dart';
@@ -13,98 +14,6 @@ class SetListScreen extends StatefulWidget {
 }
 
 class _SetListScreenState extends State<SetListScreen> {
-  void _showNewSetDialog() {
-    final TextEditingController controller = TextEditingController();
-    final colorScheme = Theme.of(context).colorScheme;
-    ColorSchemeKey selectedColorKey =
-        ColorSchemeKey.Default; // Default color key
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Create New Set'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(hintText: 'New set name'),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 180, // Fixed height for the color grid
-                    width: double.maxFinite,
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 1,
-                      ),
-                      itemCount: ColorSchemeKey.values.length,
-                      itemBuilder: (context, index) {
-                        final colorKey = ColorSchemeKey.values[index];
-                        return InkWell(
-                          onTap: () {
-                            setState(() {
-                              selectedColorKey = colorKey;
-                            });
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: colorKey.getColorFromScheme(
-                                  Theme.of(context).colorScheme),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: selectedColorKey == colorKey
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.outline,
-                                width: selectedColorKey == colorKey ? 3 : 1,
-                              ),
-                            ),
-                            child: selectedColorKey == colorKey
-                                ? Icon(
-                                    Icons.check,
-                                    color: colorScheme.onSurface,
-                                  )
-                                : null,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Close the dialog
-                  },
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    final newName = controller.text.trim();
-                    if (newName.isNotEmpty) {
-                      Provider.of<SetProvider>(context, listen: false)
-                          .createSet(newName, selectedColorKey);
-                    }
-                    Navigator.pop(context); // Close the dialog
-                  },
-                  child: const Text('Create'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final setProvider = Provider.of<SetProvider>(context);
@@ -127,12 +36,14 @@ class _SetListScreenState extends State<SetListScreen> {
               ),
             )
           : ListView.separated(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
               itemCount: questionSets.length,
               separatorBuilder: (context, index) => const SizedBox(height: 4),
               itemBuilder: (context, index) {
                 final set = questionSets[index];
                 final totalQuestions = set.questions.length;
+                final answeredQuestions = set.questionsAnsweredToday;
+                bool completed = answeredQuestions == totalQuestions;
                 return Card.outlined(
                   color: set.selectedColorKey
                       .getColorFromScheme(Theme.of(context).colorScheme),
@@ -171,9 +82,9 @@ class _SetListScreenState extends State<SetListScreen> {
                         subtitle: Text(
                           totalQuestions == 0
                               ? 'Empty set'
-                              : totalQuestions == 1
-                                  ? '$totalQuestions question'
-                                  : '$totalQuestions questions',
+                              : (answeredQuestions == totalQuestions)
+                                  ? 'All $totalQuestions questions answered today'
+                                  : '$answeredQuestions/$totalQuestions Questions answered today',
                           style: const TextStyle(
                             fontSize: 12,
                           ),
@@ -191,8 +102,13 @@ class _SetListScreenState extends State<SetListScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showNewSetDialog,
-        label: const Text('Create Set'),
+        onPressed: () async {
+          final result = await showNewSetDialog(context, setProvider, true);
+          if (result != null) {
+            setProvider.createSet(result.name, result.color);
+          }
+        },
+        label: const Text('Add Set'),
         icon: const Icon(Icons.create_new_folder),
       ),
     );

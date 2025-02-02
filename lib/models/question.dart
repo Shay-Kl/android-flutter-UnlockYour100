@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Question {
@@ -7,25 +6,26 @@ class Question {
   final String question;
   final String correctAnswer;
   final List<String> wrongAnswers;
-  final String explanation; // Added explanation field
+  final String explanation;
   int correctAnswers;
   int totalAnswers;
   String setName;
-  int answeredToday;
+  DateTime? lastAnswered;
 
   List<String> get answers => [correctAnswer, ...wrongAnswers];
-  double get successRate => (totalAnswers != 0) ? correctAnswers / totalAnswers : 0;
+  double get successRate =>
+      (totalAnswers != 0) ? correctAnswers / totalAnswers : 0;
 
   Question({
     this.id,
     required this.question,
     required this.correctAnswer,
     required this.wrongAnswers,
-    this.explanation = '', // Initialize explanation
+    this.explanation = '',
     this.correctAnswers = 0,
     this.totalAnswers = 0,
     required this.setName,
-    this.answeredToday = 0,
+    this.lastAnswered,
   });
 
   @override
@@ -36,11 +36,11 @@ class Question {
         question == other.question &&
         correctAnswer == other.correctAnswer &&
         wrongAnswers == other.wrongAnswers &&
-        explanation == other.explanation && // Compare explanation
+        explanation == other.explanation &&
         correctAnswers == other.correctAnswers &&
         totalAnswers == other.totalAnswers &&
         setName == other.setName &&
-        answeredToday == other.answeredToday;
+        lastAnswered == other.lastAnswered;
   }
 
   @override
@@ -49,18 +49,19 @@ class Question {
         question.hashCode ^
         correctAnswer.hashCode ^
         wrongAnswers.hashCode ^
-        explanation.hashCode ^ // Include explanation
+        explanation.hashCode ^
         correctAnswers.hashCode ^
         totalAnswers.hashCode ^
         setName.hashCode ^
-        answeredToday.hashCode;
+        lastAnswered.hashCode; // Include lastAnswered
   }
 
-  Question.empty() : this(question: '', correctAnswer: '', wrongAnswers: [], setName: '');
-  
+  Question.empty()
+      : this(question: '', correctAnswer: '', wrongAnswers: [], setName: '');
+
   List<String> getShuffledAnswers() {
     final allAnswers = [correctAnswer, ...wrongAnswers];
-    allAnswers.shuffle(Random()); // Shuffle the list
+    allAnswers.shuffle(Random());
     return allAnswers;
   }
 
@@ -70,11 +71,11 @@ class Question {
       'question': question,
       'correctAnswer': correctAnswer,
       'wrongAnswers': wrongAnswers,
-      'explanation': explanation, // Add explanation to map
+      'explanation': explanation,
       'correctAnswers': correctAnswers,
       'totalAnswers': totalAnswers,
       'setName': setName,
-      'answeredToday': answeredToday,
+      'lastAnswered': lastAnswered?.toIso8601String(), // Updated field
     };
   }
 
@@ -84,19 +85,38 @@ class Question {
       question: map['question'] as String,
       correctAnswer: map['correctAnswer'] as String,
       wrongAnswers: List<String>.from(map['wrongAnswers'] as List<dynamic>),
-      explanation: map['explanation'] as String? ?? '', // Initialize explanation
+      explanation: map['explanation'] as String? ?? '',
       correctAnswers: map['correctAnswers'] as int? ?? 0,
       totalAnswers: map['totalAnswers'] as int? ?? 0,
       setName: map['setName'] as String? ?? '',
-      answeredToday: map['answeredToday'] as int? ?? 0,
+      lastAnswered: map['lastAnswered'] != null
+          ? DateTime.tryParse(map['lastAnswered'] as String)
+          : null,
     );
   }
 
   factory Question.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    return Question.fromMap({
-      'id': doc.id,
-      ...data,
-    });
+    return Question(
+      id: doc.id,
+      question: data['question'] as String,
+      correctAnswer: data['correctAnswer'] as String,
+      wrongAnswers: List<String>.from(data['wrongAnswers']),
+      explanation: data['explanation'] as String,
+      correctAnswers: data['correctAnswers'] as int,
+      totalAnswers: data['totalAnswers'] as int,
+      lastAnswered: data['lastAnswered'] == null
+          ? null
+          : (data['lastAnswered'] as Timestamp).toDate(),
+      setName: data['setName'] as String,
+    );
+  }
+
+  bool get isAnsweredToday {
+    if (lastAnswered == null) return false;
+    final today = DateTime.now();
+    return lastAnswered!.year == today.year &&
+        lastAnswered!.month == today.month &&
+        lastAnswered!.day == today.day;
   }
 }

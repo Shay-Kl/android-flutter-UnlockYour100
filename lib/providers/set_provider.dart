@@ -37,7 +37,7 @@ class SetProvider extends ChangeNotifier {
 
   void _listenToFirestore() {
     try {
-    _firestoreSubscription =_setCollection.snapshots().listen((snapshot) async {
+      _firestoreSubscription = _setCollection.snapshots().listen((snapshot) async {
         final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
       
       // Check if user logged in and answered questions today
@@ -47,36 +47,13 @@ class SetProvider extends ChangeNotifier {
           .collection('activity')
           .doc(today);
 
-      final activitySnapshot = await activityDocRef.get();
-      bool answeredQuestionsToday = false;
-      
-      if (activitySnapshot.exists) {
-        final data = activitySnapshot.data() as Map<String, dynamic>;
-        answeredQuestionsToday = (data['answeredQuestions'] ?? 0) > 0;
-      }
 
       final List<Future<QuestionSet>> setFutures = [];
       final batch = _firestore.batch();
 
       for (final doc in snapshot.docs) {
-        setFutures.add(_fetchSetWithQuestions(doc, resetAnswers: !answeredQuestionsToday));
+        setFutures.add(_fetchSetWithQuestions(doc, ));
 
-        // Fetch questions for this set
-        final questionsSnapshot =
-            await doc.reference.collection('questions').get();
-
-        for (final questionDoc in questionsSnapshot.docs) {
-          final question = Question.fromDocument(questionDoc);
-
-          if (!answeredQuestionsToday && question.answeredToday > 0) {
-            // Reset answeredToday field
-            question.answeredToday = 0;
-
-            batch.update(questionDoc.reference, {
-              'answeredToday': question.answeredToday,
-            });
-          }
-        }
       }
       // Wait for all QuestionSets to be fetched concurrently
       final updatedSets = await Future.wait(setFutures);
@@ -99,7 +76,7 @@ class SetProvider extends ChangeNotifier {
     super.dispose();
   }
 
-Future<QuestionSet> _fetchSetWithQuestions(DocumentSnapshot doc, {bool resetAnswers = false}) async {
+Future<QuestionSet> _fetchSetWithQuestions(DocumentSnapshot doc) async {
   try {
     final data = doc.data() as Map<String, dynamic>;
     // Fetch questions for this set
@@ -107,9 +84,6 @@ Future<QuestionSet> _fetchSetWithQuestions(DocumentSnapshot doc, {bool resetAnsw
   
   final questions = questionsSnapshot.docs.map((qDoc) {
     final question = Question.fromDocument(qDoc);
-    if (resetAnswers) {
-      question.answeredToday = 0;
-    }
     return question;
   }).toList();
     // Create and return the QuestionSet
@@ -145,8 +119,7 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
           oldSets[i].questions[j].explanation != newSets[i].questions[j].explanation ||
           oldSets[i].questions[j].correctAnswers != newSets[i].questions[j].correctAnswers ||
           oldSets[i].questions[j].totalAnswers != newSets[i].questions[j].totalAnswers ||
-          oldSets[i].questions[j].setName != newSets[i].questions[j].setName ||
-          oldSets[i].questions[j].answeredToday != newSets[i].questions[j].answeredToday)
+          oldSets[i].questions[j].setName != newSets[i].questions[j].setName)
           {
         return false;
       }
@@ -228,7 +201,7 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
       final questionUpdate = {
         'correctAnswers': question.correctAnswers + (success ? 1 : 0),
         'totalAnswers': question.totalAnswers + 1,
-        'answeredToday': question.answeredToday + 1, // Increment answered today
+        'lastAnswered': FieldValue.serverTimestamp(),
       };
 
       // Firestore batch for atomic updates
@@ -257,7 +230,7 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
       if (questionIndex != -1) {
         _sets[setIndex].questions[questionIndex].correctAnswers += (success ? 1 : 0);
         _sets[setIndex].questions[questionIndex].totalAnswers += 1;
-        _sets[setIndex].questions[questionIndex].answeredToday += 1;
+        _sets[setIndex].questions[questionIndex].lastAnswered = DateTime.now();
       }
 
       // Notify listeners to update UI
@@ -377,5 +350,8 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
       debugPrint("deleteQuestionFromSet: Error deleting question from set: $e");
     } 
   }
+  bool setExists(String setName) {
+    return _sets.any((set) => set.setName == setName);
+  }
 }
-  
+

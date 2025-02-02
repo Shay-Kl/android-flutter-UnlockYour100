@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project/widgets/set_creator_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'question_editor_screen.dart';
@@ -8,13 +9,6 @@ import '../providers/set_provider.dart';
 import '../models/colors.dart';
 import '../models/set.dart';
 import '../widgets/question_card.dart';
-
-class SetEditResult {
-  final String name;
-  final ColorSchemeKey color;
-
-  SetEditResult(this.name, this.color);
-}
 
 class QuestionListScreen extends StatefulWidget {
   final QuestionSet set;
@@ -26,6 +20,10 @@ class QuestionListScreen extends StatefulWidget {
 
 class _QuestionListScreenState extends State<QuestionListScreen> {
   late String setName;
+
+  // -------------------------------------------------------------------------
+  // Build Functions
+  // -------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +54,8 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
                     delegate: QuestionSearchDelegate(
                       questions: questions,
                       onEditQuestion: _handleEditQuestion,
-                      buildQuestionList: (filteredQuestions) => _buildQuestionList(questions: filteredQuestions),
+                      buildQuestionList: (filteredQuestions) =>
+                          _buildQuestionList(questions: filteredQuestions),
                     ),
                   );
                 },
@@ -64,8 +63,8 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
               IconButton(
                 icon: const Icon(Icons.edit),
                 onPressed: () async {
-                  final SetEditResult? result = await _showEditSetDialog(
-                      context: context,
+                  final result = await showNewSetDialog(
+                      context, setProvider, false,
                       initialName: setName,
                       initialColor: currentSet.selectedColorKey);
                   if (result != null) {
@@ -137,27 +136,28 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
         final question = questions[index];
         return Dismissible(
           key: ValueKey('${index}_${question.question}'),
-            confirmDismiss: (direction) async {
+          confirmDismiss: (direction) async {
             return await showDialog(
               context: context,
               builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Delete Question'),
-                content: const Text('Are you sure you want to delete this question?'),
-                actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Delete'),
-                ),
-                ],
-              );
+                return AlertDialog(
+                  title: const Text('Delete Question'),
+                  content: const Text(
+                      'Are you sure you want to delete this question?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                );
               },
             );
-            },
+          },
           onDismissed: (direction) {
             _handleDeleteQuestion(questions[index].id);
           },
@@ -260,114 +260,17 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
       },
     );
   }
-
-  Future<SetEditResult?> _showEditSetDialog({
-    required BuildContext context,
-    required String initialName,
-    required ColorSchemeKey initialColor,
-  }) async {
-    final TextEditingController controller =
-        TextEditingController(text: initialName);
-    ColorSchemeKey selectedColorKey = initialColor;
-
-    return showDialog<SetEditResult>(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Edit Set'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(hintText: 'Set name'),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 180,
-                    width: double.maxFinite,
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 1,
-                      ),
-                      itemCount: ColorSchemeKey.values.length,
-                      itemBuilder: (context, index) {
-                        final colorKey = ColorSchemeKey.values[index];
-                        return InkWell(
-                          onTap: () {
-                            setState(() {
-                              selectedColorKey = colorKey;
-                            });
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: colorKey.getColorFromScheme(
-                                  Theme.of(context).colorScheme),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: selectedColorKey == colorKey
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.outline,
-                                width: selectedColorKey == colorKey ? 3 : 1,
-                              ),
-                            ),
-                            child: selectedColorKey == colorKey
-                                ? const Icon(
-                                    Icons.check,
-                                  )
-                                : null,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    final newName = controller.text.trim();
-                    if (newName.isNotEmpty &&
-                        (newName != initialName ||
-                            selectedColorKey != initialColor)) {
-                      Navigator.pop(
-                          context, SetEditResult(newName, selectedColorKey));
-                    } else {
-                      Navigator.pop(context, null);
-                    }
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
 }
 
 class QuestionSearchDelegate extends SearchDelegate {
   final List<Question> questions;
   final void Function(List<Question>, String, int) onEditQuestion;
-  final Widget Function(List<Question>) buildQuestionList;  // New field
+  final Widget Function(List<Question>) buildQuestionList; // New field
 
   QuestionSearchDelegate({
     required this.questions,
     required this.onEditQuestion,
-    required this.buildQuestionList,  // New parameter
+    required this.buildQuestionList, // New parameter
   });
 
   @override

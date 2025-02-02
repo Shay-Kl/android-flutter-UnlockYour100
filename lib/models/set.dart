@@ -49,6 +49,16 @@ class QuestionSet {
     );
   }
 
+  int get questionsAnsweredToday {
+    int count = 0;
+    for (final question in questions) {
+      if (question.isAnsweredToday) {
+        count++;
+      }
+    }
+    return count;
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
