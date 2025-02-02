@@ -17,7 +17,7 @@ class SetProvider extends ChangeNotifier {
 
   SetProvider(this.userEmail){
     if (userEmail.isNotEmpty) {
-     _setCollection = _firestore.collection('users').doc(userEmail).collection('sets');
+     _setCollection = _firestore.collection('users').doc(userEmail).collection('sets-sprint2');
     }
   }
 

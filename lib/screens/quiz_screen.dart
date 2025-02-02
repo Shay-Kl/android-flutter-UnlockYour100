@@ -110,7 +110,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   child: Padding(
                     padding: EdgeInsets.all(16.0),
                     child: Text(
-                      'No questions available. Please activate an set with questionsin the library to continue.',
+                      'No questions available. Please activate a set with questions in the library to continue.',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 16.0),
                     ),
