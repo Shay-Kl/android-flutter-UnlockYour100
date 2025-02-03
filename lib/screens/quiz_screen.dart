@@ -84,7 +84,7 @@ class _QuizScreenState extends State<QuizScreen> {
               a.totalAnswers == 0 ? 0 : a.correctAnswers / a.totalAnswers;
           final ratioB =
               b.totalAnswers == 0 ? 0 : b.correctAnswers / b.totalAnswers;
-          return ratioB.compareTo(ratioA); // Higher ratio should come first
+          return ratioA.compareTo(ratioB); // Higher ratio should come first
         });
 
         // Set currentIndex to the first question with answeredToday == 0
@@ -92,7 +92,9 @@ class _QuizScreenState extends State<QuizScreen> {
             questions.indexWhere((question) => !question.isAnsweredToday);
 
         // If all questions are answered, set currentIndex to the last question
-        question = (questions.isNotEmpty && currentIndex != -1) ? questions[currentIndex] : null;
+        question = (questions.isNotEmpty && currentIndex != -1)
+            ? questions[currentIndex]
+            : null;
         shuffledAnswers = question?.getShuffledAnswers() ?? [];
         selectedAnswer = null;
         hasAnswered = false;
@@ -116,52 +118,52 @@ class _QuizScreenState extends State<QuizScreen> {
                     ),
                   ),
                 )
-              : 
-              currentIndex == -1
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'All active questions have been answered today',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 16.0),
+              : currentIndex == -1
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text(
+                          'Congratulations!\n All active questions have been answered today.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16.0),
+                        ),
                       ),
-                    ),
-                  )
-                :
-              Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 20),
-                      _buildQuestionCard(),
-                      const SizedBox(height: 6),
-                      Expanded(
-                        child: Center(
-                          child: SingleChildScrollView(
-                            child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.85,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  ...shuffledAnswers.map(
-                                      (answer) => _buildAnswerCard(answer)),
-                                  if (hasAnswered &&
-                                      question?.explanation != "")
-                                    _buildExplanationCard(
-                                        question!.explanation),
-                                ],
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 20),
+                          _buildQuestionCard(),
+                          const SizedBox(height: 6),
+                          Expanded(
+                            child: Center(
+                              child: SingleChildScrollView(
+                                child: SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.85,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      ...shuffledAnswers.map(
+                                          (answer) => _buildAnswerCard(answer)),
+                                      if (hasAnswered &&
+                                          question?.explanation != "")
+                                        _buildExplanationCard(
+                                            question!.explanation),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
+                          )
+                        ],
+                      ),
+                    ),
           Align(
             alignment: Alignment.center,
             child: ConfettiWidget(
@@ -180,7 +182,6 @@ class _QuizScreenState extends State<QuizScreen> {
                 Colors.orange,
                 Colors.purple
               ],
-
               confettiController: _confettiController,
             ),
           ),
@@ -190,11 +191,15 @@ class _QuizScreenState extends State<QuizScreen> {
           ? Padding(
               padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
               child: FilledButton(
-                onPressed: (hasAnswered || currentIndex == -1) ? _handleNextQuestionPress : null,
+                onPressed: (hasAnswered || currentIndex == -1)
+                    ? _handleNextQuestionPress
+                    : null,
                 child: Text(
-                  ((currentIndex != questions.length - 1) && currentIndex != -1)
-                      ? 'Next Question'
-                      : 'Return to First Question',
+                  (currentIndex == -1)
+                      ? 'Return to First Question'
+                      : (currentIndex == questions.length - 1)
+                          ? 'Continue'
+                          : 'Next Question',
                 ),
               ),
             )
@@ -205,7 +210,7 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget _buildQuestionCard() {
     final colorScheme = Theme.of(context).colorScheme;
     final setProvider = Provider.of<SetProvider>(context);
-    final questionsLeft = questions.length-currentIndex;
+    final questionsLeft = questions.length - currentIndex;
     return Card.outlined(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
@@ -240,8 +245,7 @@ class _QuizScreenState extends State<QuizScreen> {
             Text(
               (questionsLeft == 1)
                   ? 'Last question'
-                  :
-              '${questions.length-currentIndex} questions left',
+                  : '${questions.length - currentIndex} questions left',
               style: const TextStyle(
                 fontSize: 14,
               ),
@@ -315,12 +319,16 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   _handleAnswerPress(String text) {
+    debugPrint(
+        'totalAnswers: ${question!.totalAnswers}, correctAnswers: ${question!.correctAnswers}');
+
     final setProvider = Provider.of<SetProvider>(context, listen: false);
     setState(() {
       setStateChange = true;
       selectedAnswer = text;
       hasAnswered = true;
     });
+
     if (text == question!.correctAnswer) {
       _confettiController.play();
 
@@ -329,9 +337,12 @@ class _QuizScreenState extends State<QuizScreen> {
     } else {
       _audioPlayer.play(AssetSource('wrong.mp3'), volume: 0.7);
     }
+    question!.totalAnswers = question!.totalAnswers + 1;
+
     setProvider.updateQuestionSuccessRate(
         question!, text == question!.correctAnswer);
-    question!.totalAnswers = question!.totalAnswers + 1;
+    debugPrint(
+        'totalAnswers: ${question!.totalAnswers}, correctAnswers: ${question!.correctAnswers}');
   }
 
   _handleNextQuestionPress() {
@@ -339,13 +350,14 @@ class _QuizScreenState extends State<QuizScreen> {
       setStateChange = true;
       if (currentIndex != questions.length - 1) {
         currentIndex = currentIndex + 1;
+
+        selectedAnswer = null;
+        hasAnswered = false;
+        question = questions[currentIndex];
+        shuffledAnswers = question!.getShuffledAnswers();
       } else {
-        currentIndex = 0;
+        currentIndex = -1;
       }
-      selectedAnswer = null;
-      hasAnswered = false;
-      question = questions[currentIndex];
-      shuffledAnswers = question!.getShuffledAnswers();
     });
   }
 }

@@ -181,7 +181,7 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
       debugPrint("updateSetColorAndName: Error updating color and name: $e");
     }
    }
-
+   
   Future<void> updateQuestionSuccessRate(Question question, bool success) async {
   try {
       late String setId;
@@ -197,10 +197,10 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
           .doc(userEmail)
           .collection('activity')
           .doc(today);
-
+      
       final questionUpdate = {
-        'correctAnswers': question.correctAnswers + (success ? 1 : 0),
-        'totalAnswers': question.totalAnswers + 1,
+        'correctAnswers': question.correctAnswers,
+        'totalAnswers': question.totalAnswers,
         'lastAnswered': FieldValue.serverTimestamp(),
       };
 
@@ -223,15 +223,6 @@ bool _areSetsEqual(List<QuestionSet> oldSets, List<QuestionSet> newSets) {
 
       // Commit Firestore batch
       await batch.commit();
-
-      // Update local cache
-      final questionIndex =
-          _sets[setIndex].questions.indexWhere((q) => q.id == question.id);
-      if (questionIndex != -1) {
-        _sets[setIndex].questions[questionIndex].correctAnswers += (success ? 1 : 0);
-        _sets[setIndex].questions[questionIndex].totalAnswers += 1;
-        _sets[setIndex].questions[questionIndex].lastAnswered = DateTime.now();
-      }
 
       // Notify listeners to update UI
       notifyListeners();
