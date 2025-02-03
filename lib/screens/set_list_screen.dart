@@ -44,33 +44,31 @@ class _SetListScreenState extends State<SetListScreen> {
             )
           : SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 150),
-                child: Column(
-                  key: ValueKey('${activeSets.length}-${inactiveSets.length}'),
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (activeSets.isNotEmpty) ...[
-                      const Text(
-                        'Active Sets',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      ..._buildSetCards(activeSets, colorScheme, setProvider),
-                    ],
-                    if (inactiveSets.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Inactive Sets',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      ..._buildSetCards(inactiveSets, colorScheme, setProvider),
-                    ]
+              child: Column(
+                // Removed AnimatedSwitcher wrapper to disable transition animation.
+                key: ValueKey('${activeSets.length}-${inactiveSets.length}'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (activeSets.isNotEmpty) ...[
+                    const Text(
+                      'Active Sets',
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    ..._buildSetCards(activeSets, colorScheme, setProvider),
                   ],
-                ),
+                  if (inactiveSets.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Inactive Sets',
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    ..._buildSetCards(inactiveSets, colorScheme, setProvider),
+                  ]
+                ],
               ),
             ),
       floatingActionButton: FloatingActionButton.extended(

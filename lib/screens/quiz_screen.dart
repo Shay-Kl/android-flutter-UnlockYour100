@@ -319,8 +319,6 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   _handleAnswerPress(String text) {
-    debugPrint(
-        'totalAnswers: ${question!.totalAnswers}, correctAnswers: ${question!.correctAnswers}');
 
     final setProvider = Provider.of<SetProvider>(context, listen: false);
     setState(() {
@@ -341,8 +339,6 @@ class _QuizScreenState extends State<QuizScreen> {
 
     setProvider.updateQuestionSuccessRate(
         question!, text == question!.correctAnswer);
-    debugPrint(
-        'totalAnswers: ${question!.totalAnswers}, correctAnswers: ${question!.correctAnswers}');
   }
 
   _handleNextQuestionPress() {
