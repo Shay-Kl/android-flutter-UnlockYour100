@@ -3,18 +3,18 @@
 import 'package:flutter/material.dart';
 
 enum ColorSchemeKey {
-  Default, 
-  Group1, 
-  Group2, 
-  Group3, 
-  Group4, 
-  Group5, 
-  Group6, 
+  Default,
+  Group1,
+  Group2,
+  Group3,
+  Group4,
+  Group5,
+  Group6,
 }
 
 extension ColorSchemeKeyExtension on ColorSchemeKey {
   Color getColorFromScheme(ColorScheme scheme) {
-    if (scheme == ColorScheme.fromSeed(seedColor: Colors.blue)){
+    if (scheme == ColorScheme.fromSeed(seedColor: Colors.blue)) {
       switch (this) {
         case ColorSchemeKey.Default:
           return const Color.fromARGB(255, 255, 255, 255);
@@ -31,8 +31,7 @@ extension ColorSchemeKeyExtension on ColorSchemeKey {
         case ColorSchemeKey.Group6:
           return const Color.fromARGB(255, 226, 246, 211);
       }
-    }
-    else {
+    } else {
       switch (this) {
         case ColorSchemeKey.Default:
           return const Color.fromARGB(255, 0, 0, 0);
@@ -49,7 +48,7 @@ extension ColorSchemeKeyExtension on ColorSchemeKey {
         case ColorSchemeKey.Group6:
           return const Color.fromARGB(255, 38, 77, 59);
       }
-    }  
+    }
   }
 
   String toKeyString() => toString().split('.').last;
