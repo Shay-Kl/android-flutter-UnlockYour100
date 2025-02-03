@@ -12,30 +12,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _attemptAutoLogin();
-  }
-
-  Future<void> _attemptAutoLogin() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final account = await authProvider.autoSignIn();
-    if (account != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    }
-  }
-
   Future<void> _handleGoogleSignIn(BuildContext context) async {
     try {
       final googleSignIn = GoogleSignIn();
       final account = await googleSignIn.signIn();
       if (account != null) {
         Provider.of<AuthProvider>(context, listen: false).setUser(account);
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),

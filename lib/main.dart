@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:project/providers/set_provider.dart';
 import 'package:project/utils/settings_manager.dart';
 import 'screens/login_screen.dart';
+import 'screens/home_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'providers/auth_provider.dart';
@@ -22,7 +23,10 @@ class MyAppInit extends StatelessWidget {
       future: _initialization,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Scaffold(body: Center(child: Text(snapshot.error.toString(), textDirection: TextDirection.ltr)));
+          return Scaffold(
+              body: Center(
+                  child: Text(snapshot.error.toString(),
+                      textDirection: TextDirection.ltr)));
         }
         if (snapshot.connectionState == ConnectionState.done) {
           return const MyApp();
@@ -42,7 +46,8 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider<SettingsManager>.value(value: SettingsManager.instance),
+        ChangeNotifierProvider<SettingsManager>.value(
+            value: SettingsManager.instance),
         ChangeNotifierProxyProvider<AuthProvider, SetProvider>(
           create: (_) => SetProvider(''),
           update: (_, authProvider, setProvider) {
@@ -63,7 +68,8 @@ class MyApp extends StatelessWidget {
             final userEmail = authProvider.userEmail ?? '';
 
             // Initialize only if the userEmail changes or hasn't been initialized yet
-            if (activityProvider == null || activityProvider.userEmail != userEmail) {
+            if (activityProvider == null ||
+                activityProvider.userEmail != userEmail) {
               final newProvider = ActivityProvider(userEmail);
               newProvider.initialize();
               return newProvider;
@@ -87,15 +93,53 @@ class MyApp extends StatelessWidget {
               useMaterial3: true,
             ),
             darkTheme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.dark),
+              colorScheme: ColorScheme.fromSeed(
+                  seedColor: Colors.blue, brightness: Brightness.dark),
               useMaterial3: true,
             ),
             themeMode: themeProvider.themeMode,
-            home: const LoginScreen(),
+            home: const LandingScreen(), // updated home widget
             debugShowCheckedModeBanner: false,
           );
         },
       ),
     );
+  }
+}
+
+// New widget to handle auto login
+class LandingScreen extends StatefulWidget {
+  const LandingScreen({super.key});
+  @override
+  State<LandingScreen> createState() => _LandingScreenState();
+}
+
+class _LandingScreenState extends State<LandingScreen> {
+  bool isLoading = true;
+  bool isSignedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _attemptAutoLogin();
+  }
+
+  Future<void> _attemptAutoLogin() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final account = await authProvider.autoSignIn();
+    setState(() {
+      isSignedIn = account != null;
+      isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    return isSignedIn ? const HomeScreen() : const LoginScreen();
   }
 }

@@ -130,10 +130,14 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
   }
 
   Widget _buildQuestionList({required List<Question> questions}) {
+    // Sort questions alphabetically by the question text
+    final sortedQuestions = List<Question>.from(questions)
+      ..sort((a, b) => a.question.compareTo(b.question));
     return ListView.builder(
-      itemCount: questions.length,
+      padding: const EdgeInsets.only(bottom: 80),
+      itemCount: sortedQuestions.length,
       itemBuilder: (context, index) {
-        final question = questions[index];
+        final question = sortedQuestions[index];
         return Dismissible(
           key: ValueKey('${index}_${question.question}'),
           confirmDismiss: (direction) async {
@@ -159,14 +163,14 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
             );
           },
           onDismissed: (direction) {
-            _handleDeleteQuestion(questions[index].id);
+            _handleDeleteQuestion(sortedQuestions[index].id);
           },
           background: Container(
             color: Colors.red.shade400,
           ),
           child: QuestionCard(
             question: question,
-            onTap: () => _handleEditQuestion(questions, setName, index),
+            onTap: () => _handleEditQuestion(sortedQuestions, setName, index),
             margin:
                 const EdgeInsets.only(top: 2, bottom: 8, left: 12, right: 12),
           ),

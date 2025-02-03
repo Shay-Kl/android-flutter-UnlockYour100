@@ -38,9 +38,9 @@ Future<SetEditResult?> showNewSetDialog(
                         hintText: 'Set name', errorText: errorText),
                   ),
                   const SizedBox(height: 16),
-                  SizedBox(
-                    height: 180,
-                    width: double.maxFinite,
+                    SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.25,
+                    width: MediaQuery.of(context).size.width * 0.8,
                     child: GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
