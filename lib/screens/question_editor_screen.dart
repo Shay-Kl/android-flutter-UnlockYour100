@@ -216,6 +216,7 @@ class _QuestionEditorScreenState extends State<QuestionEditorScreen> {
     for (int i = 1; i < maxAnswerCount; i++) {
       _answerControllers[i].text = answers['wrongAnswers']?[i - 1] ?? '';
     }
+    _explanationController.text = answers['explanation'] ?? '';
     if (!mounted) return;
     setState(() {
       loading = false;

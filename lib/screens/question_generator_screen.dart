@@ -425,7 +425,7 @@ class _QuestionGeneratorScreenState extends State<QuestionGeneratorScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error generating questions: $e')),
+        const SnackBar(content: Text('Error generating questions')),
       );
     }
 

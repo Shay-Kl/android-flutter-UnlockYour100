@@ -282,6 +282,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
         await setDoc.reference.delete();
       }
+      final setsSprint2Snapshot = await userDocRef.collection('sets-sprint2').get();
+      for (final setDoc in setsSprint2Snapshot.docs) {
+        // Delete every document in the nested 'questions' subcollection
+        final questionsSnapshot =
+            await setDoc.reference.collection('questions').get();
+        for (final questionDoc in questionsSnapshot.docs) {
+          await questionDoc.reference.delete();
+        }
+        await setDoc.reference.delete();
+      }
 
       // Delete all documents in the 'activity' subcollection
       final activitySnapshot = await userDocRef.collection('activity').get();
