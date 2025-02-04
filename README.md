@@ -1,7 +1,7 @@
-# # UnlockYour100
+# UnlockYour100
 
 
-> UnlockYour100 is a Flutter-based Android application that provides a quiz screen within the app, displaying educational questions to promote effortless spaced repetition learning.
+> UnlockYour100 is a Flutter-based Android application that allows students studying for tests to build ai gnerated quizzes to promote effortless spaced repetition learning.
 
 
 ## Motivation
