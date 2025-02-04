@@ -196,7 +196,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     : null,
                 child: Text(
                   (currentIndex == -1)
-                      ? 'Return to First Question'
+                      ? 'Start Over'
                       : (currentIndex == questions.length - 1)
                           ? 'Continue'
                           : 'Next Question',

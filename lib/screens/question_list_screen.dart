@@ -134,7 +134,7 @@ class _QuestionListScreenState extends State<QuestionListScreen> {
     final sortedQuestions = List<Question>.from(questions)
       ..sort((a, b) => a.question.compareTo(b.question));
     return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 80),
+      padding: const EdgeInsets.only(bottom: 80, top: 20),
       itemCount: sortedQuestions.length,
       itemBuilder: (context, index) {
         final question = sortedQuestions[index];

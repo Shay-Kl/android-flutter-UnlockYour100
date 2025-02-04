@@ -27,6 +27,7 @@ Future<SetEditResult?> showNewSetDialog(
         builder: (context, setState) {
           return AlertDialog(
             title: Text(isNewSet ? 'Create New Set' : 'Edit Set'),
+
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -39,12 +40,12 @@ Future<SetEditResult?> showNewSetDialog(
                   ),
                   const SizedBox(height: 16),
                     SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.25,
+                    height: MediaQuery.of(context).size.width * 0.25,
                     width: MediaQuery.of(context).size.width * 0.8,
                     child: GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
+                        crossAxisCount: 6,
                         crossAxisSpacing: 8,
                         mainAxisSpacing: 8,
                         childAspectRatio: 1,
