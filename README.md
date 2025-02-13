@@ -1,3 +1,11 @@
+The completed app can be found [here](https://play.google.com/store/apps/details?id=com.technion.unlockyour100).
+The app was developed by Liad Motorin, Libi Kogan and Shay Kleiman as part of our studies at the Technion during 2024-2025.<br><br>
+
+Below is the pitch for the app we presented as part of the course:<br>
+
+ 
+
+
 # UnlockYour100
 
 
